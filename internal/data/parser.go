@@ -1,4 +1,4 @@
-package journal
+package data
 
 import (
 	"bufio"
@@ -116,4 +116,3 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 
 	return transactions, nil
 }
-

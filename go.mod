@@ -1,4 +1,4 @@
-module lledger-tui
+module lledger
 
 go 1.24.5
 

@@ -1,4 +1,4 @@
-package journal
+package data
 
 import (
 	"time"

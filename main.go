@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"lledger-tui/pkg/journal"
-	"lledger-tui/pkg/ui"
+	"lledger/internal/data"
+	"lledger/internal/ui"
 	"log"
 	"os"
 	"time"
@@ -13,8 +13,8 @@ import (
 )
 
 type model struct {
-	allTransactions      []journal.Transaction
-	filteredTransactions []journal.Transaction
+	allTransactions      []data.Transaction
+	filteredTransactions []data.Transaction
 
 	transactionTable ui.TransactionTableModel
 	datePicker       ui.DatePickerModel
@@ -46,7 +46,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q":
 			return m, tea.Quit
 		}
-	case []journal.Transaction:
+	case []data.Transaction:
 		m.allTransactions = msg
 		startDate, endDate := m.datePicker.GetSelectedDateRange()
 		m.filterTransactions(startDate, endDate)
@@ -69,7 +69,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) filterTransactions(startDate, endDate time.Time) {
-	m.filteredTransactions = []journal.Transaction{}
+	m.filteredTransactions = []data.Transaction{}
 	for _, tx := range m.allTransactions {
 		if (tx.Date.After(startDate) || tx.Date.Equal(startDate)) && (tx.Date.Before(endDate) || tx.Date.Equal(endDate)) {
 			m.filteredTransactions = append(m.filteredTransactions, tx)
@@ -97,7 +97,7 @@ func (m model) loadTransactionsCmd() tea.Cmd {
 			return fmt.Errorf("LEDGER_FILE environment variable not set")
 		}
 
-		transactions, err := journal.ParseJournal(filePath)
+		transactions, err := data.ParseJournal(filePath)
 		if err != nil {
 			return err
 		}

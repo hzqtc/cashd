@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"lledger-tui/pkg/journal"
+	"lledger/internal/data"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -61,7 +61,7 @@ func (m *TransactionTableModel) SetHeight(height int) {
 	m.table.SetHeight(height)
 }
 
-func (m *TransactionTableModel) SetTransactions(transactions []journal.Transaction) {
+func (m *TransactionTableModel) SetTransactions(transactions []data.Transaction) {
 	rows := make([]table.Row, len(transactions))
 	for i, tx := range transactions {
 		rows[i] = table.Row{
