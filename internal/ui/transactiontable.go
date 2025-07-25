@@ -6,12 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
-
-var baseStyle = lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("240"))
 
 type TransactionTableModel struct {
 	table table.Model
@@ -27,18 +22,7 @@ func NewTransactionTableModel() TransactionTableModel {
 	}
 
 	t := table.New(table.WithColumns(columns))
-
-	t.SetStyles(table.Styles{
-		Header: lipgloss.NewStyle().
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("240")).
-			BorderBottom(true).
-			Bold(true),
-		Selected: lipgloss.NewStyle().
-			Background(lipgloss.Color("235")).
-			Foreground(lipgloss.Color("255")).
-			Bold(false),
-	})
+	t.SetStyles(getTableStyle())
 
 	return TransactionTableModel{table: t}
 }
@@ -57,8 +41,9 @@ func (m TransactionTableModel) View() string {
 	return baseStyle.Render(m.table.View())
 }
 
-func (m *TransactionTableModel) SetHeight(height int) {
+func (m *TransactionTableModel) SetDimensions(height, width int) {
 	m.table.SetHeight(height)
+	m.table.SetWidth(width)
 }
 
 func (m *TransactionTableModel) SetTransactions(transactions []data.Transaction) {

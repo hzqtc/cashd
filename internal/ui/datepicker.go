@@ -5,7 +5,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type DatePickerModel struct {
@@ -39,10 +38,7 @@ func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
 
 func (m DatePickerModel) View() string {
 	monthStr := m.currentMonth.Format("January 2006")
-	return lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("63")).
-		Padding(0, 1).
+	return datepickerStyle.
 		Render(fmt.Sprintf(" < %s > ", monthStr))
 }
 

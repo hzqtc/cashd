@@ -8,7 +8,10 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+)
+
+const (
+	ENV_LEDGER_FILE = "LEDGER_FILE"
 )
 
 type Model struct {
@@ -77,23 +80,11 @@ func (m *Model) filterTransactions(startDate, endDate time.Time) {
 	m.transactionTable.SetTransactions(m.filteredTransactions)
 }
 
-func (m Model) View() string {
-	// Given the available vertical space, calculate the new height for the transaction table.
-	// The date picker has a fixed height of 3, and we want to leave 2 rows for the header and footer.
-	height := m.height - 5
-	m.transactionTable.SetHeight(height)
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		m.datePicker.View(),
-		m.transactionTable.View(),
-	)
-}
-
 func loadTransactionsCmd() tea.Cmd {
 	return func() tea.Msg {
-		filePath := os.Getenv("LEDGER_FILE")
+		filePath := os.Getenv(ENV_LEDGER_FILE)
 		if filePath == "" {
-			return fmt.Errorf("LEDGER_FILE environment variable not set")
+			return fmt.Errorf("%s environment variable not set", ENV_LEDGER_FILE)
 		}
 
 		transactions, err := data.ParseJournal(filePath)
