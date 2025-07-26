@@ -11,14 +11,17 @@ type DatePickerModel struct {
 	currentMonth time.Time
 }
 
-func NewDatePickerModel() DatePickerModel {
-	return DatePickerModel{
-		currentMonth: time.Now().Truncate(24*time.Hour).AddDate(0, 0, -time.Now().Day()+1), // Start of current month
-	}
+type DateRangeChangedMsg struct {
+	Start time.Time
+	End   time.Time
 }
 
-func (m DatePickerModel) Init() tea.Cmd {
-	return nil
+func NewDatePickerModel() DatePickerModel {
+	now := time.Now()
+	return DatePickerModel{
+		// First day of the month
+		currentMonth: time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()),
+	}
 }
 
 func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
@@ -27,19 +30,17 @@ func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
 		switch msg.String() {
 		case "h", "left":
 			m.currentMonth = m.currentMonth.AddDate(0, -1, 0)
-			return m, DateRangeChanged(m.GetSelectedDateRange())
+			return m, onDateRangeChange(m.GetSelectedDateRange())
 		case "l", "right":
 			m.currentMonth = m.currentMonth.AddDate(0, 1, 0)
-			return m, DateRangeChanged(m.GetSelectedDateRange())
+			return m, onDateRangeChange(m.GetSelectedDateRange())
 		}
 	}
 	return m, nil
 }
 
 func (m DatePickerModel) View() string {
-	monthStr := m.currentMonth.Format("January 2006")
-	return datepickerStyle.
-		Render(fmt.Sprintf(" < %s > ", monthStr))
+	return datepickerStyle.Render(fmt.Sprintf(" < %s > ", m.currentMonth.Format("January 2006")))
 }
 
 func (m DatePickerModel) GetSelectedDateRange() (time.Time, time.Time) {
@@ -48,16 +49,11 @@ func (m DatePickerModel) GetSelectedDateRange() (time.Time, time.Time) {
 	return startOfMonth, endOfMonth
 }
 
-type DateRangeChangedMsg struct {
-	StartDate time.Time
-	EndDate   time.Time
-}
-
-func DateRangeChanged(startDate, endDate time.Time) tea.Cmd {
+func onDateRangeChange(startDate, endDate time.Time) tea.Cmd {
 	return func() tea.Msg {
 		return DateRangeChangedMsg{
-			StartDate: startDate,
-			EndDate:   endDate,
+			Start: startDate,
+			End:   endDate,
 		}
 	}
 }

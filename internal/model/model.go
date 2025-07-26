@@ -33,7 +33,7 @@ func NewModel() Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(loadTransactionsCmd(), m.datePicker.Init())
+	return tea.Batch(loadTransactionsCmd())
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -54,7 +54,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.filterTransactions(startDate, endDate)
 	case ui.DateRangeChangedMsg:
 		// This message comes from the date picker when the date range changes
-		m.filterTransactions(msg.StartDate, msg.EndDate)
+		m.filterTransactions(msg.Start, msg.End)
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
