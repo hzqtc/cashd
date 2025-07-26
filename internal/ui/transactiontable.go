@@ -77,9 +77,11 @@ func NewTransactionTableModel() TransactionTableModel {
 		columns = append(columns, table.Column{Title: title, Width: width})
 	}
 
-	t := table.New(table.WithColumns(columns))
-	t.SetStyles(getTableStyle())
-
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithFocused(true),
+		table.WithStyles(getTableStyle()),
+	)
 	return TransactionTableModel{table: t}
 }
 
