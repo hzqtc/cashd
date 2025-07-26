@@ -41,15 +41,16 @@ var (
 )
 
 func getTableStyle() table.Styles {
-	return table.Styles{
-		Header: lipgloss.NewStyle().
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(borderColor).
-			BorderBottom(true).
-			Bold(true),
-		Selected: lipgloss.NewStyle().
-			Background(highlightColor).
-			Foreground(highlightForegroudColor).
-			Bold(false),
-	}
+	tableStyles := table.DefaultStyles()
+	tableStyles.Header = tableStyles.Header.
+		Foreground(highlightColor).
+		BorderStyle(roundedBorder).
+		BorderForeground(borderColor).
+		BorderBottom(true).
+		Bold(true)
+	tableStyles.Selected = tableStyles.Selected.
+		Foreground(highlightForegroudColor).
+		Background(highlightColor).
+		Bold(true)
+	return tableStyles
 }

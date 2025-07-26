@@ -8,27 +8,79 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type columnName int
+
+const (
+	colUnknown columnName = -1
+)
+
+const (
+	colSymbol columnName = iota
+	colDate
+	colType
+	colAccount
+	colCategory
+	colDesc
+	colAmount
+
+	totalNumColumns
+)
+
+func (c columnName) rightAligned() bool {
+	return c == colAmount
+}
+
+func (c columnName) String() string {
+	switch c {
+	case colSymbol:
+		return " "
+	case colDate:
+		return "Date"
+	case colType:
+		return "Type"
+	case colAccount:
+		return "Account"
+	case colCategory:
+		return "Category"
+	case colDesc:
+		return "Desc"
+	case colAmount:
+		return "Amount"
+	default:
+		return "Unknown"
+	}
+}
+
+var colWidthMap = map[columnName]int{
+	colSymbol:   2,
+	colDate:     12,
+	colType:     10,
+	colAccount:  25,
+	colCategory: 15,
+	colDesc:     20,
+	colAmount:   12,
+}
+
 type TransactionTableModel struct {
 	table table.Model
 }
 
 func NewTransactionTableModel() TransactionTableModel {
-	columns := []table.Column{
-		{Title: "Date", Width: 10},
-		{Title: "Type", Width: 8},
-		{Title: "Account", Width: 30},
-		{Title: "Category", Width: 15},
-		{Title: "Amount", Width: 12},
+	columns := []table.Column{}
+	for i := range int(totalNumColumns) {
+		col := columnName(i)
+		title := col.String()
+		width := colWidthMap[col]
+		if col.rightAligned() {
+			title = fmt.Sprintf("%*s", width, title)
+		}
+		columns = append(columns, table.Column{Title: title, Width: width})
 	}
 
 	t := table.New(table.WithColumns(columns))
 	t.SetStyles(getTableStyle())
 
 	return TransactionTableModel{table: t}
-}
-
-func (m TransactionTableModel) Init() tea.Cmd {
-	return nil
 }
 
 func (m TransactionTableModel) Update(msg tea.Msg) (TransactionTableModel, tea.Cmd) {
@@ -49,13 +101,37 @@ func (m *TransactionTableModel) SetDimensions(height, width int) {
 func (m *TransactionTableModel) SetTransactions(transactions []data.Transaction) {
 	rows := make([]table.Row, len(transactions))
 	for i, tx := range transactions {
-		rows[i] = table.Row{
-			tx.Date.Format("2006/01/02"),
-			string(tx.Type),
-			tx.Account,
-			tx.Category,
-			fmt.Sprintf("%.2f", tx.Amount),
+		rowData := []string{}
+		for i := range int(totalNumColumns) {
+			col := columnName(i)
+			colData := getColData(tx, col)
+			if col.rightAligned() {
+				colData = fmt.Sprintf("%*s", colWidthMap[col], colData)
+			}
+			rowData = append(rowData, colData)
 		}
+		rows[i] = table.Row(rowData)
 	}
 	m.table.SetRows(rows)
+}
+
+func getColData(tx data.Transaction, col columnName) string {
+	switch col {
+	case colSymbol:
+		return tx.Symbol()
+	case colDate:
+		return tx.Date.Format("2006/01/02")
+	case colType:
+		return string(tx.Type)
+	case colAccount:
+		return tx.Account
+	case colCategory:
+		return tx.Category
+	case colDesc:
+		return tx.Description
+	case colAmount:
+		return fmt.Sprintf("$%.2f", tx.Amount)
+	default:
+		return ""
+	}
 }
