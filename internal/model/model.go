@@ -73,7 +73,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) filterTransactions(startDate, endDate time.Time) {
 	m.filteredTransactions = []data.Transaction{}
 	for _, tx := range m.allTransactions {
-		if (tx.Date.After(startDate) || tx.Date.Equal(startDate)) && (tx.Date.Before(endDate) || tx.Date.Equal(endDate)) {
+		if (tx.Date.After(startDate) || tx.Date.Equal(startDate)) && tx.Date.Before(endDate) {
 			m.filteredTransactions = append(m.filteredTransactions, tx)
 		}
 	}

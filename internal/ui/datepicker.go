@@ -12,8 +12,8 @@ type DatePickerModel struct {
 }
 
 type DateRangeChangedMsg struct {
-	Start time.Time
-	End   time.Time
+	Start time.Time // Inclusive
+	End   time.Time // Exclusive
 }
 
 func NewDatePickerModel() DatePickerModel {
@@ -45,7 +45,7 @@ func (m DatePickerModel) View() string {
 
 func (m DatePickerModel) GetSelectedDateRange() (time.Time, time.Time) {
 	startOfMonth := m.currentMonth
-	endOfMonth := startOfMonth.AddDate(0, 1, -1)
+	endOfMonth := startOfMonth.AddDate(0, 1, 0)
 	return startOfMonth, endOfMonth
 }
 

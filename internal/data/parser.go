@@ -59,7 +59,7 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 			dateStr := matches[1]
 			description := matches[2]
 
-			parsedDate, err := time.Parse("2006-01-02", dateStr)
+			parsedDate, err := time.ParseInLocation("2006-01-02", dateStr, time.Local)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse date %q: %w", dateStr, err)
 			}
