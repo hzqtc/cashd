@@ -3,9 +3,9 @@ package data
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"math"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,22 +20,19 @@ const (
 )
 
 // ParseJournal reads the hledger journal file and parses transactions.
-func ParseJournal(filePath string) ([]Transaction, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open journal file: %w", err)
-	}
-	defer file.Close()
-
+func parseJournal(reader io.ReadCloser) ([]Transaction, error) {
 	var transactions []Transaction
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(reader)
 
 	// Regex to match transaction header: YYYY-MM-DD Description
+	// TODO: add support for '!' or '*' or '(code)' after date
+	// TODO: add support for '| note'
 	transactionHeaderRegex := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2})\s+(.*)$`)
 	// Regex to match account line, with the following variations
 	// transaction type:category amount, e.g. expenses:Utilities 49.99, income:Cash Back $-47.11
 	// account type:account amount, e.g. liability:BoA 123 $-49.99, assets:BoA Checking $47.11
-	accountLineRegex := regexp.MustCompile(`^\s+(.+):(.+)\s{8}(\$[-]?[\d,]+\.?\d*)$`)
+	// TODO: add support for commodity other than '$'
+	accountLineRegex := regexp.MustCompile(`^\s+(.+):(.+)\s{2,}\$[-]?([\d,]+\.?\d*)$`)
 
 	var transactionDate time.Time
 	var transactionDesc string
@@ -43,11 +40,10 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 	var transactionCategory string
 	var transactionAccount string
 	var transactionAmount float64
-	var transactionLines int
+	var numPostings int
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Printf("Processing line: %s\n", line) // Debug print
 
 		if line == "" || strings.HasPrefix(line, ";") || strings.HasPrefix(line, "#") {
 			// Skip empty lines and comments
@@ -56,6 +52,7 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 
 		if matches := transactionHeaderRegex.FindStringSubmatch(line); len(matches) > 0 {
 			// This is a new transaction header
+			numPostings = 0
 			dateStr := matches[1]
 			description := matches[2]
 
@@ -65,10 +62,9 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 			}
 			transactionDate = parsedDate
 			transactionDesc = description
-			log.Printf("  Matched transaction header. Date: %s, Desc: %s\n", dateStr, description) // Debug print
 		} else if matches := accountLineRegex.FindStringSubmatch(line); len(matches) > 0 {
-			// This is an account or category line for the current transaction
-			transactionLines++
+			// This is a posting for the current transaction
+			numPostings++
 			typeStr := strings.TrimSpace(matches[1])             // account type (assets, liability) or transactionType (income, expense)
 			accountOrCategory := strings.TrimSpace(matches[2])   // account or cateogory
 			amountStr := strings.ReplaceAll(matches[3], ",", "") // Remove commas for parsing
@@ -91,8 +87,9 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 				transactionAccount = accountOrCategory
 			}
 
-			// Each transaction have 2 lines
-			if transactionLines == 2 {
+			// Currently only handling transactions that involves exactly 2 postings
+			// TODO: add support for more than 2 postings
+			if numPostings == 2 {
 				t := Transaction{
 					Date:        transactionDate,
 					Type:        transactionType,
@@ -102,16 +99,14 @@ func ParseJournal(filePath string) ([]Transaction, error) {
 					Description: transactionDesc,
 				}
 				transactions = append(transactions, t)
-				log.Printf("  Matched account line: %v\n", t) // Debug print
-				transactionLines = 0
 			}
 		} else {
-			log.Printf("  No regex match for line.\n") // Debug print
+			log.Printf("   Skipping line: %s\n", line)
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading journal file: %w", err)
+		return nil, fmt.Errorf("error parsing hledger journal: %w", err)
 	}
 
 	return transactions, nil

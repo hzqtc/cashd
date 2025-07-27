@@ -1,10 +1,8 @@
 package model
 
 import (
-	"fmt"
 	"lledger/internal/data"
 	"lledger/internal/ui"
-	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,9 +12,19 @@ const (
 	ENV_LEDGER_FILE = "LEDGER_FILE"
 )
 
+type dataLoadingSuccessMsg struct {
+	transactions []data.Transaction
+}
+
+type dataLoadingErrorMsg struct {
+	err error
+}
+
 type Model struct {
 	allTransactions      []data.Transaction
-	filteredTransactions []data.Transaction
+	filteredTransactions []*data.Transaction
+
+	errMsg string
 
 	transactionTable ui.TransactionTableModel
 	datePicker       ui.DatePickerModel
@@ -48,10 +56,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q":
 			return m, tea.Quit
 		}
-	case []data.Transaction:
-		m.allTransactions = msg
+	case dataLoadingSuccessMsg:
+		m.allTransactions = msg.transactions
 		startDate, endDate := m.datePicker.GetSelectedDateRange()
 		m.filterTransactions(startDate, endDate)
+	case dataLoadingErrorMsg:
+		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
 		// This message comes from the date picker when the date range changes
 		m.filterTransactions(msg.Start, msg.End)
@@ -71,10 +81,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) filterTransactions(startDate, endDate time.Time) {
-	m.filteredTransactions = []data.Transaction{}
+	m.filteredTransactions = []*data.Transaction{}
 	for _, tx := range m.allTransactions {
 		if (tx.Date.After(startDate) || tx.Date.Equal(startDate)) && tx.Date.Before(endDate) {
-			m.filteredTransactions = append(m.filteredTransactions, tx)
+			m.filteredTransactions = append(m.filteredTransactions, &tx)
 		}
 	}
 	m.transactionTable.SetTransactions(m.filteredTransactions)
@@ -82,15 +92,11 @@ func (m *Model) filterTransactions(startDate, endDate time.Time) {
 
 func loadTransactionsCmd() tea.Cmd {
 	return func() tea.Msg {
-		filePath := os.Getenv(ENV_LEDGER_FILE)
-		if filePath == "" {
-			return fmt.Errorf("%s environment variable not set", ENV_LEDGER_FILE)
-		}
-
-		transactions, err := data.ParseJournal(filePath)
+		transactions, err := data.LoadTransactions()
 		if err != nil {
-			return err
+			return dataLoadingErrorMsg{err}
+		} else {
+			return dataLoadingSuccessMsg{transactions}
 		}
-		return transactions
 	}
 }

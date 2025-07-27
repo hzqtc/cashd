@@ -100,7 +100,7 @@ func (m *TransactionTableModel) SetDimensions(height, width int) {
 	m.table.SetWidth(width)
 }
 
-func (m *TransactionTableModel) SetTransactions(transactions []data.Transaction) {
+func (m *TransactionTableModel) SetTransactions(transactions []*data.Transaction) {
 	rows := make([]table.Row, len(transactions))
 	for i, tx := range transactions {
 		rowData := []string{}
@@ -117,7 +117,7 @@ func (m *TransactionTableModel) SetTransactions(transactions []data.Transaction)
 	m.table.SetRows(rows)
 }
 
-func getColData(tx data.Transaction, col columnName) string {
+func getColData(tx *data.Transaction, col columnName) string {
 	switch col {
 	case colSymbol:
 		return tx.Symbol()
