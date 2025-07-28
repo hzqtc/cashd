@@ -61,6 +61,14 @@ var colWidthMap = map[columnName]int{
 	colAmount:   12,
 }
 
+var PreferredTableWidth = func() int {
+	tableWidth := 0
+	for i := range totalNumColumns {
+		tableWidth += colWidthMap[columnName(i)] + 2
+	}
+	return tableWidth
+}()
+
 type TransactionTableModel struct {
 	table table.Model
 }

@@ -56,7 +56,13 @@ func (m SummaryModel) View() string {
 	s.WriteString("\nTop expense accounts:\n")
 	s.WriteString(m.topAccountsView(data.Expense))
 
-	return lipgloss.NewStyle().Padding(2).Render(s.String())
+	return lipgloss.NewStyle().
+		Border(getRoundedBorderWithTitle("Summary", m.width)).
+		BorderForeground(borderColor).
+		Width(m.width).
+		Height(m.height).
+		Padding(0, 1).
+		Render(s.String())
 }
 
 func (m SummaryModel) topCategoriesView(txnType data.TransactionType) string {

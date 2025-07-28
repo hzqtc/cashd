@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"lledger/internal/ui"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -23,6 +24,6 @@ func (m Model) View() string {
 }
 
 func (m *Model) updateLayout() {
-	m.transactionTable.SetDimensions(110, m.height-5)
-	m.summary.SetDimensions(m.width-110, m.height-5)
+	m.transactionTable.SetDimensions(ui.PreferredTableWidth, m.height-5)
+	m.summary.SetDimensions(m.width-ui.PreferredTableWidth-4, m.height-5)
 }
