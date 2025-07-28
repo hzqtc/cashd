@@ -12,8 +12,8 @@ const (
 )
 
 const (
-	incomeSymbol = ""
-	expensSymbol = "󰔳"
+	incomeSymbol = "󱙹"
+	expensSymbol = ""
 )
 
 type Transaction struct {
