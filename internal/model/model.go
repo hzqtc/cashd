@@ -21,13 +21,14 @@ type dataLoadingErrorMsg struct {
 }
 
 type Model struct {
-	allTransactions      []data.Transaction
-	filteredTransactions []*data.Transaction
+	allTransactions  []data.Transaction
+	viewTransactions []*data.Transaction
 
 	errMsg string
 
 	transactionTable ui.TransactionTableModel
 	datePicker       ui.DatePickerModel
+	summary          ui.SummaryModel
 
 	width  int
 	height int
@@ -37,6 +38,7 @@ func NewModel() Model {
 	return Model{
 		transactionTable: ui.NewTransactionTableModel(),
 		datePicker:       ui.NewDatePickerModel(),
+		summary:          ui.NewSummaryModel(),
 	}
 }
 
@@ -68,6 +70,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		m.updateLayout()
 	}
 
 	// Update sub-models
@@ -81,13 +84,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) filterTransactions(startDate, endDate time.Time) {
-	m.filteredTransactions = []*data.Transaction{}
+	m.viewTransactions = []*data.Transaction{}
 	for _, tx := range m.allTransactions {
 		if (tx.Date.After(startDate) || tx.Date.Equal(startDate)) && tx.Date.Before(endDate) {
-			m.filteredTransactions = append(m.filteredTransactions, &tx)
+			m.viewTransactions = append(m.viewTransactions, &tx)
 		}
 	}
-	m.transactionTable.SetTransactions(m.filteredTransactions)
+	m.transactionTable.SetTransactions(m.viewTransactions)
+	m.summary.SetTransactions(m.viewTransactions)
 }
 
 func loadTransactionsCmd() tea.Cmd {
@@ -100,3 +104,4 @@ func loadTransactionsCmd() tea.Cmd {
 		}
 	}
 }
+

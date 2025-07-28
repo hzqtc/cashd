@@ -95,9 +95,9 @@ func (m TransactionTableModel) View() string {
 	return baseStyle.Render(m.table.View())
 }
 
-func (m *TransactionTableModel) SetDimensions(height, width int) {
-	m.table.SetHeight(height)
+func (m *TransactionTableModel) SetDimensions(width, height int) {
 	m.table.SetWidth(width)
+	m.table.SetHeight(height)
 }
 
 func (m *TransactionTableModel) SetTransactions(transactions []*data.Transaction) {
