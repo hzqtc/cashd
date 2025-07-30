@@ -1,9 +1,10 @@
-package data
+package ledger
 
 import (
 	"bufio"
 	"fmt"
 	"io"
+	"lledger/internal/data"
 	"log"
 	"math"
 	"regexp"
@@ -20,8 +21,8 @@ const (
 )
 
 // ParseJournal reads the hledger journal file and parses transactions.
-func parseJournal(reader io.ReadCloser) ([]Transaction, error) {
-	var transactions []Transaction
+func parseJournal(reader io.ReadCloser) ([]data.Transaction, error) {
+	var transactions []data.Transaction
 	scanner := bufio.NewScanner(reader)
 
 	// Regex to match transaction header: YYYY-MM-DD Description
@@ -36,7 +37,7 @@ func parseJournal(reader io.ReadCloser) ([]Transaction, error) {
 
 	var transactionDate time.Time
 	var transactionDesc string
-	var transactionType TransactionType
+	var transactionType data.TransactionType
 	var transactionCategory string
 	var transactionAccount string
 	var transactionAmount float64
@@ -78,10 +79,10 @@ func parseJournal(reader io.ReadCloser) ([]Transaction, error) {
 
 			switch typeStr {
 			case expenses:
-				transactionType = Expense
+				transactionType = data.Expense
 				transactionCategory = accountOrCategory
 			case income:
-				transactionType = Income
+				transactionType = data.Income
 				transactionCategory = accountOrCategory
 			case assets, liability:
 				transactionAccount = accountOrCategory
@@ -90,7 +91,7 @@ func parseJournal(reader io.ReadCloser) ([]Transaction, error) {
 			// Currently only handling transactions that involves exactly 2 postings
 			// TODO: add support for more than 2 postings
 			if numPostings == 2 {
-				t := Transaction{
+				t := data.Transaction{
 					Date:        transactionDate,
 					Type:        transactionType,
 					Account:     transactionAccount,

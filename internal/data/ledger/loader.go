@@ -1,12 +1,15 @@
-package data
+package ledger
 
 import (
 	"errors"
+	"lledger/internal/data"
 	"os"
 	"os/exec"
 )
 
-func LoadTransactions() ([]Transaction, error) {
+type LedgerDataSource struct{}
+
+func (l LedgerDataSource) LoadTransactions() ([]data.Transaction, error) {
 	commands := []string{"ledger", "hledger"}
 
 	for _, cmd := range commands {

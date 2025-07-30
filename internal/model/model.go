@@ -2,6 +2,7 @@ package model
 
 import (
 	"lledger/internal/data"
+	"lledger/internal/data/ledger"
 	"lledger/internal/ui"
 	"time"
 
@@ -95,8 +96,10 @@ func (m *Model) filterTransactions(startDate, endDate time.Time) {
 }
 
 func loadTransactionsCmd() tea.Cmd {
+	// TODO: switch data source based on command line flags
+	datasource := ledger.LedgerDataSource{}
 	return func() tea.Msg {
-		transactions, err := data.LoadTransactions()
+		transactions, err := datasource.LoadTransactions()
 		if err != nil {
 			return dataLoadingErrorMsg{err}
 		} else {
@@ -104,4 +107,3 @@ func loadTransactionsCmd() tea.Cmd {
 		}
 	}
 }
-
