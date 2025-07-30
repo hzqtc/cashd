@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"lledger/internal/data"
+	"cashd/internal/data"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"

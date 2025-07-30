@@ -1,4 +1,4 @@
-module lledger
+module cashd
 
 go 1.24.5
 

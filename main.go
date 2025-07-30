@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"lledger/internal/model"
+	"cashd/internal/model"
 	"log"
 	"os"
 
@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	f, err := os.OpenFile("/tmp/lledger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	f, err := os.OpenFile("/tmp/cashd.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Printf("failed to create log file: %v", err)
 	}

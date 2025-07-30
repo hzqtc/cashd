@@ -2,7 +2,7 @@ package ledger
 
 import (
 	"errors"
-	"lledger/internal/data"
+	"cashd/internal/data"
 	"os"
 	"os/exec"
 )

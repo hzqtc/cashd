@@ -1,4 +1,4 @@
-BINARY_NAME = lledger
+BINARY_NAME = cashd
 SRC = $(wildcard *.go)
 GOBIN = $(HOME)/.local/bin
 TARGET_OS = darwin

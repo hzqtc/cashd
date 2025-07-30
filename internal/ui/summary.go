@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"lledger/internal/data"
+	"cashd/internal/data"
 	"sort"
 	"strings"
 

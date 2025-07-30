@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"lledger/internal/ui"
+	"cashd/internal/ui"
 
 	"github.com/charmbracelet/lipgloss"
 )

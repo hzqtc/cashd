@@ -1,9 +1,9 @@
 package model
 
 import (
-	"lledger/internal/data"
-	"lledger/internal/data/ledger"
-	"lledger/internal/ui"
+	"cashd/internal/data"
+	"cashd/internal/data/ledger"
+	"cashd/internal/ui"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
