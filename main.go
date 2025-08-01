@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"cashd/internal/model"
+	"fmt"
 	"log"
 	"os"
 

@@ -1,21 +1,55 @@
 package ui
 
 import (
-	"fmt"
 	"cashd/internal/data"
+	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/NimbleMarkets/ntcharts/barchart"
+	"github.com/NimbleMarkets/ntcharts/canvas/runes"
 	"github.com/charmbracelet/lipgloss"
 )
 
+const (
+	barChartHeight = 1
+	vPadding       = 0
+	hPadding       = 1
+)
+
+type entry struct {
+	key   string
+	value float64
+}
+
 type SummaryModel struct {
-	width        int
-	height       int
+	width  int
+	height int
+
+	transactions []*data.Transaction
 	totalIncome  float64
 	totalExpense float64
-	transactions []*data.Transaction
+
+	topIncomeCategories  []entry
+	topIncomeAccounts    []entry
+	topExpenseCategories []entry
+	topExpenseAccounts   []entry
+
+	incomeCategoryChart  barchart.Model
+	incomeAccountChart   barchart.Model
+	expenseCategoryChart barchart.Model
+	expenseAccountChart  barchart.Model
 }
+
+var (
+	barStyles = [5]lipgloss.Style{
+		lipgloss.NewStyle().Foreground(chartColor1).Background(chartColor1),
+		lipgloss.NewStyle().Foreground(chartColor2).Background(chartColor2),
+		lipgloss.NewStyle().Foreground(chartColor3).Background(chartColor3),
+		lipgloss.NewStyle().Foreground(chartColor4).Background(chartColor4),
+		lipgloss.NewStyle().Foreground(chartColor5).Background(chartColor5),
+	}
+)
 
 func NewSummaryModel() SummaryModel {
 	return SummaryModel{}
@@ -24,19 +58,35 @@ func NewSummaryModel() SummaryModel {
 func (m *SummaryModel) SetDimensions(width, height int) {
 	m.width = width
 	m.height = height
+	m.updateCharts()
 }
 
 func (m *SummaryModel) SetTransactions(transactions []*data.Transaction) {
 	m.transactions = transactions
+
 	m.totalIncome = 0
 	m.totalExpense = 0
-	for _, tx := range transactions {
+	for _, tx := range m.transactions {
 		if tx.Type == data.Income {
 			m.totalIncome += tx.Amount
 		} else {
 			m.totalExpense += tx.Amount
 		}
 	}
+
+	m.topIncomeCategories, m.incomeCategoryChart = m.getTopCategories(data.Income)
+	m.topIncomeAccounts, m.incomeAccountChart = m.getTopAccounts(data.Income)
+	m.topExpenseCategories, m.expenseCategoryChart = m.getTopCategories(data.Expense)
+	m.topExpenseAccounts, m.expenseAccountChart = m.getTopAccounts(data.Expense)
+
+	m.updateCharts()
+}
+
+func (m *SummaryModel) updateCharts() {
+	m.incomeCategoryChart.Draw()
+	m.incomeAccountChart.Draw()
+	m.expenseCategoryChart.Draw()
+	m.expenseAccountChart.Draw()
 }
 
 func (m SummaryModel) View() string {
@@ -47,25 +97,29 @@ func (m SummaryModel) View() string {
 	var s strings.Builder
 	s.WriteString(fmt.Sprintf("Total income: $%.2f\n", m.totalIncome))
 	s.WriteString(fmt.Sprintf("Total expenses: $%.2f\n", m.totalExpense))
+
 	s.WriteString("\nTop income categories:\n")
-	s.WriteString(m.topCategoriesView(data.Income))
-	s.WriteString("\nTop income accounts:\n")
-	s.WriteString(m.topAccountsView(data.Income))
-	s.WriteString("\nTop expense catgories:\n")
-	s.WriteString(m.topCategoriesView(data.Expense))
-	s.WriteString("\nTop expense accounts:\n")
-	s.WriteString(m.topAccountsView(data.Expense))
+	s.WriteString(m.renderSummarySection(m.topIncomeCategories, m.incomeCategoryChart))
+
+	s.WriteString("\n\nTop income accounts:\n")
+	s.WriteString(m.renderSummarySection(m.topIncomeAccounts, m.incomeAccountChart))
+
+	s.WriteString("\n\nTop expense catgories:\n")
+	s.WriteString(m.renderSummarySection(m.topExpenseCategories, m.expenseCategoryChart))
+
+	s.WriteString("\n\nTop expense accounts:\n")
+	s.WriteString(m.renderSummarySection(m.topExpenseAccounts, m.expenseAccountChart))
 
 	return lipgloss.NewStyle().
 		Border(getRoundedBorderWithTitle("Summary", m.width)).
 		BorderForeground(borderColor).
 		Width(m.width).
 		Height(m.height).
-		Padding(0, 1).
+		Padding(vPadding, hPadding).
 		Render(s.String())
 }
 
-func (m SummaryModel) topCategoriesView(txnType data.TransactionType) string {
+func (m SummaryModel) getTopCategories(txnType data.TransactionType) ([]entry, barchart.Model) {
 	expenseByCategory := make(map[string]float64)
 	for _, tx := range m.transactions {
 		if tx.Type == txnType {
@@ -73,10 +127,11 @@ func (m SummaryModel) topCategoriesView(txnType data.TransactionType) string {
 		}
 	}
 
-	return m.renderSummarySection(expenseByCategory)
+	entries := sortAndTruncate(expenseByCategory)
+	return entries, getBarChartModel(m.width-2*hPadding, entries)
 }
 
-func (m SummaryModel) topAccountsView(txnType data.TransactionType) string {
+func (m SummaryModel) getTopAccounts(txnType data.TransactionType) ([]entry, barchart.Model) {
 	expenseByAccount := make(map[string]float64)
 	for _, tx := range m.transactions {
 		if tx.Type == txnType {
@@ -84,32 +139,63 @@ func (m SummaryModel) topAccountsView(txnType data.TransactionType) string {
 		}
 	}
 
-	return m.renderSummarySection(expenseByAccount)
+	entries := sortAndTruncate(expenseByAccount)
+	return entries, getBarChartModel(m.width-2*hPadding, entries)
 }
 
-func (m SummaryModel) renderSummarySection(data map[string]float64) string {
-	type kv struct {
-		Key   string
-		Value float64
+// Sort by value in reverse order and keep the top 5 entries
+func sortAndTruncate(input map[string]float64) []entry {
+	var sorted []entry
+	for k, v := range input {
+		sorted = append(sorted, entry{k, v})
 	}
-
-	var sorted []kv
-	for k, v := range data {
-		sorted = append(sorted, kv{k, v})
-	}
-
 	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].Value > sorted[j].Value
+		return sorted[i].value > sorted[j].value
 	})
-
-	var s strings.Builder
-	for i, item := range sorted {
-		if i >= 5 {
-			break
+	if len(sorted) > 5 {
+		// Sum [4:] to be "Everything else"
+		sumOfRemaining := 0.0
+		for _, s := range sorted[4:] {
+			sumOfRemaining += s.value
 		}
-		s.WriteString(fmt.Sprintf("%s: $%.2f\n", item.Key, item.Value))
+		// Keep the first 4 items as-is
+		sorted = sorted[:4]
+		// Add Everything else as the 5th item
+		sorted = append(sorted, entry{"Everything else", sumOfRemaining})
 	}
 
-	return s.String()
+	if len(sorted) > 5 {
+		panic("assertion failed: each summary section should not have more than 5 items")
+	}
+
+	return sorted
 }
 
+func getBarChartModel(width int, data []entry) barchart.Model {
+	barValues := []barchart.BarValue{}
+	for i, item := range data {
+		barValues = append(barValues, barchart.BarValue{Name: item.key, Value: item.value, Style: barStyles[i]})
+	}
+	return barchart.New(
+		width,
+		barChartHeight,
+		barchart.WithDataSet([]barchart.BarData{{Values: barValues}}),
+		barchart.WithNoAxis(),
+		barchart.WithHorizontalBars(),
+	)
+}
+
+func (m SummaryModel) renderSummarySection(data []entry, chart barchart.Model) string {
+	var s strings.Builder
+	for i, item := range data {
+		s.WriteString(fmt.Sprintf(
+			"%s %s: $%.2f\n",
+			barStyles[i].Render(string(runes.FullBlock)), // Bar legend
+			item.key,
+			item.value,
+		))
+	}
+	s.WriteString("\n")
+
+	return s.String() + chart.View()
+}
