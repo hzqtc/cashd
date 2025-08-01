@@ -5,6 +5,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+const (
+	vPadding = 0
+	hPadding = 1
+)
+
 var (
 	highlightColor          = lipgloss.Color("#FFD580")
 	highlightForegroudColor = lipgloss.Color("#2E2E2E")
@@ -22,10 +27,8 @@ var (
 			BorderStyle(roundedBorder).
 			BorderForeground(borderColor)
 
-	datepickerStyle = lipgloss.NewStyle().
-			BorderStyle(roundedBorder).
-			BorderForeground(borderColor).
-			Padding(0, 1)
+	keyStyle = lipgloss.NewStyle().
+			Foreground(highlightColor)
 )
 
 func getTableStyle() table.Styles {

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"fmt"
 	"cashd/internal/ui"
+	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -24,6 +24,7 @@ func (m Model) View() string {
 }
 
 func (m *Model) updateLayout() {
+	m.datePicker.SetWidth(ui.PreferredTableWidth)
 	m.transactionTable.SetDimensions(ui.PreferredTableWidth, m.height-5)
 	m.summary.SetDimensions(m.width-ui.PreferredTableWidth-4, m.height-5)
 }

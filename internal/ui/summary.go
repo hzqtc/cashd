@@ -13,8 +13,6 @@ import (
 
 const (
 	barChartHeight = 1
-	vPadding       = 0
-	hPadding       = 1
 )
 
 type entry struct {

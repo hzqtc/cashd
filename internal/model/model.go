@@ -61,7 +61,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case dataLoadingSuccessMsg:
 		m.allTransactions = msg.transactions
-		startDate, endDate := m.datePicker.GetSelectedDateRange()
+		startDate, endDate := m.datePicker.SelectedDateRange()
 		m.filterTransactions(startDate, endDate)
 	case dataLoadingErrorMsg:
 		m.errMsg = msg.err.Error()
