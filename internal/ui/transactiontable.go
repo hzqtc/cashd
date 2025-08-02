@@ -48,13 +48,13 @@ func (c txnColumn) String() string {
 }
 
 var txnColWidthMap = map[txnColumn]int{
-	txnColSymbol:   2,
-	txnColDate:     12,
-	txnColType:     10,
-	txnColAccount:  25,
-	txnColCategory: 15,
-	txnColDesc:     20,
-	txnColAmount:   12,
+	txnColSymbol:   symbolColWidth,
+	txnColDate:     dateColWidth,
+	txnColType:     typeColWidth,
+	txnColAccount:  accountColWidth,
+	txnColCategory: categoryColWidth,
+	txnColDesc:     descColWidth,
+	txnColAmount:   amountColWidth,
 }
 
 var TxnTableWidth = func() int {

@@ -40,6 +40,9 @@ func (m Model) View() string {
 			m.accountTable.View(),
 		)
 	case ui.CategoryView:
+		body = lipgloss.JoinHorizontal(lipgloss.Top,
+			m.categoryTable.View(),
+		)
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left,
@@ -49,14 +52,22 @@ func (m Model) View() string {
 }
 
 func (m *Model) updateLayout() {
-	// TODO: Hide right side panel if not enough width
-	// Align global components to transaction view components since that's the default view
-	m.datePicker.SetWidth(ui.TxnTableWidth)
-	m.navBar.SetWidth(m.width - ui.TxnTableWidth - 4)
+	summaryPanelWidth := max(30, m.width-ui.TxnTableWidth-4)
+	if summaryPanelWidth >= ui.NavBarWidth {
+		// Try to align top components to transaction view components since that's the default view
+		m.datePicker.SetWidth(ui.TxnTableWidth)
+		m.navBar.SetWidth(summaryPanelWidth)
+	} else {
+		// However, prefer to keep navbar a singleline
+		m.navBar.SetWidth(ui.NavBarWidth)
+		m.datePicker.SetWidth(m.width - ui.NavBarWidth - 4)
+	}
 	// Transaction view components
 	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
 	m.transactionTable.SetDimensions(ui.TxnTableWidth, m.height-datePickerHeight-searchInputHeight-vSpacing)
-	m.summary.SetDimensions(m.width-ui.TxnTableWidth-4, m.height-datePickerHeight-vSpacing)
+	m.summary.SetDimensions(summaryPanelWidth, m.height-datePickerHeight-vSpacing)
 	// Account view components
 	m.accountTable.SetDimensions(ui.AccountTableWidth, m.height-datePickerHeight-vSpacing)
+	// Category view components
+	m.categoryTable.SetDimensions(ui.CategoryTableWidth, m.height-datePickerHeight-vSpacing)
 }

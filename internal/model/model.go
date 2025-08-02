@@ -31,6 +31,7 @@ type Model struct {
 	summary          ui.SummaryModel
 	searchInput      ui.SearchInputModel
 	accountTable     ui.AccountTableModel
+	categoryTable    ui.CategoryTableModel
 
 	globalQuit     key.Binding
 	quit           key.Binding
@@ -49,6 +50,7 @@ func NewModel() Model {
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
 		accountTable:     ui.NewAccountTableModel(),
+		categoryTable:    ui.NewCategoryTableModel(),
 		globalQuit:       key.NewBinding(key.WithKeys("ctrl+c")),
 		activateSearch:   key.NewBinding(key.WithKeys("/")),
 		clearSearch:      key.NewBinding(key.WithKeys("esc")),
@@ -74,6 +76,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else if m.navBar.ViewMode() == ui.AccountView {
 			cmds = append(cmds, m.processAccountViewKeys(msg))
 		} else if m.navBar.ViewMode() == ui.CategoryView {
+			cmds = append(cmds, m.processCategoryViewKeys(msg))
 		}
 		// Global components always process key events
 		m.datePicker, cmd = m.datePicker.Update(msg)
@@ -124,6 +127,12 @@ func (m *Model) processAccountViewKeys(msg tea.KeyMsg) tea.Cmd {
 	return cmd
 }
 
+func (m *Model) processCategoryViewKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	m.categoryTable, cmd = m.categoryTable.Update(msg)
+	return cmd
+}
+
 func (m *Model) filterTransactions() {
 	startDate, endDate := m.datePicker.SelectedDateRange()
 	// m.allTransactions are ordered by date, use binary search to find start, end index
@@ -160,6 +169,7 @@ func (m *Model) filterTransactions() {
 	m.summary.SetTransactions(matchingTransactions)
 	// Other tables and views are not affected by search query
 	m.accountTable.SetTransactions(viewTransactions)
+	m.categoryTable.SetTransactions(viewTransactions)
 }
 
 func loadTransactionsCmd() tea.Cmd {

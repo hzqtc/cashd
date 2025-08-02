@@ -17,6 +17,8 @@ const (
 	CategoryView    ViewMode = "Categories"
 )
 
+const NavBarWidth = 40
+
 type NavBarModel struct {
 	width    int
 	viewMode ViewMode

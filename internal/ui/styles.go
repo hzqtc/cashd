@@ -10,6 +10,18 @@ const (
 	hPadding = 1
 )
 
+const (
+	symbolColWidth      = 2
+	dateColWidth        = 12
+	typeColWidth        = 8
+	accountTypeColWidth = 12
+	accountColWidth     = 25
+	categoryColWidth    = 20
+	descColWidth        = 28
+	amountColWidth      = 10
+	numberColWidth      = 8
+)
+
 var (
 	highlightColor          = lipgloss.Color("#FFD580")
 	highlightForegroudColor = lipgloss.Color("#2E2E2E")

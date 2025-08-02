@@ -31,7 +31,7 @@ func (c accountColumn) String() string {
 	case acctColType:
 		return "Type"
 	case acctColName:
-		return "Name"
+		return "Account"
 	case acctColIncome:
 		return "Income"
 	case acctColExpense:
@@ -42,11 +42,11 @@ func (c accountColumn) String() string {
 }
 
 var accountColWidthMap = map[accountColumn]int{
-	acctColSymbol:  2,
-	acctColType:    12,
-	acctColName:    25,
-	acctColIncome:  12,
-	acctColExpense: 12,
+	acctColSymbol:  symbolColWidth,
+	acctColType:    accountTypeColWidth,
+	acctColName:    accountColWidth,
+	acctColIncome:  amountColWidth,
+	acctColExpense: amountColWidth,
 }
 
 var AccountTableWidth = func() int {
@@ -112,7 +112,7 @@ func (m *AccountTableModel) SetTransactions(transactions []*data.Transaction) {
 		rowData := []string{}
 		for i := range int(totalNumAcctColumns) {
 			col := accountColumn(i)
-			colData := getColData(acct, col)
+			colData := getAccountColData(acct, col)
 			if col.rightAligned() {
 				colData = fmt.Sprintf("%*s", accountColWidthMap[col], colData)
 			}
@@ -162,7 +162,7 @@ func getAccountInfo(transactions []*data.Transaction) []*accountInfo {
 	return accounts
 }
 
-func getColData(acct *accountInfo, col accountColumn) string {
+func getAccountColData(acct *accountInfo, col accountColumn) string {
 	switch col {
 	case acctColSymbol:
 		return acct.symbol
