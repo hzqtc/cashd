@@ -1,15 +1,15 @@
 package ledger
 
 import (
-	"errors"
 	"cashd/internal/data"
+	"errors"
 	"os"
 	"os/exec"
 )
 
 type LedgerDataSource struct{}
 
-func (l LedgerDataSource) LoadTransactions() ([]data.Transaction, error) {
+func (l LedgerDataSource) LoadTransactions() ([]*data.Transaction, error) {
 	commands := []string{"ledger", "hledger"}
 
 	for _, cmd := range commands {

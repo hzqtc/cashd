@@ -2,9 +2,9 @@ package ledger
 
 import (
 	"bufio"
+	"cashd/internal/data"
 	"fmt"
 	"io"
-	"cashd/internal/data"
 	"log"
 	"math"
 	"regexp"
@@ -21,8 +21,8 @@ const (
 )
 
 // ParseJournal reads the hledger journal file and parses transactions.
-func parseJournal(reader io.ReadCloser) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func parseJournal(reader io.ReadCloser) ([]*data.Transaction, error) {
+	var transactions []*data.Transaction
 	scanner := bufio.NewScanner(reader)
 
 	// Regex to match transaction header: YYYY-MM-DD Description
@@ -99,10 +99,10 @@ func parseJournal(reader io.ReadCloser) ([]data.Transaction, error) {
 					Amount:      transactionAmount,
 					Description: transactionDesc,
 				}
-				transactions = append(transactions, t)
+				transactions = append(transactions, &t)
 			}
 		} else {
-			log.Printf("   Skipping line: %s\n", line)
+			log.Printf("skipping line: %s\n", line)
 		}
 	}
 

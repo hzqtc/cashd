@@ -56,6 +56,7 @@ func NewSummaryModel() SummaryModel {
 func (m *SummaryModel) SetDimensions(width, height int) {
 	m.width = width
 	m.height = height
+	m.resizeCharts()
 	m.updateCharts()
 }
 
@@ -85,6 +86,13 @@ func (m *SummaryModel) updateCharts() {
 	m.incomeAccountChart.Draw()
 	m.expenseCategoryChart.Draw()
 	m.expenseAccountChart.Draw()
+}
+
+func (m *SummaryModel) resizeCharts() {
+	m.incomeCategoryChart.Resize(m.width-2*hPadding, barChartHeight)
+	m.incomeAccountChart.Resize(m.width-2*hPadding, barChartHeight)
+	m.expenseCategoryChart.Resize(m.width-2*hPadding, barChartHeight)
+	m.expenseAccountChart.Resize(m.width-2*hPadding, barChartHeight)
 }
 
 func (m SummaryModel) View() string {

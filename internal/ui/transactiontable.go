@@ -1,18 +1,14 @@
 package ui
 
 import (
-	"fmt"
 	"cashd/internal/data"
+	"fmt"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type columnName int
-
-const (
-	colUnknown columnName = -1
-)
 
 const (
 	colSymbol columnName = iota
@@ -43,7 +39,7 @@ func (c columnName) String() string {
 	case colCategory:
 		return "Category"
 	case colDesc:
-		return "Desc"
+		return "Description"
 	case colAmount:
 		return "Amount"
 	default:
