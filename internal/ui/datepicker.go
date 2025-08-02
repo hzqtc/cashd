@@ -13,10 +13,10 @@ import (
 type increment string
 
 const (
-	weekly    increment = "Week"
-	monthly   increment = "Month"
-	quarterly increment = "Quarter"
-	annually  increment = "Year"
+	weekly    increment = "Weekly"
+	monthly   increment = "Monthly"
+	quarterly increment = "Quarterly"
+	annually  increment = "Yearly"
 )
 
 type DatePickerModel struct {
@@ -138,6 +138,7 @@ func (m DatePickerModel) View() string {
 	var leftStr strings.Builder
 	var rightStr strings.Builder
 
+	leftStr.WriteString(fmt.Sprintf("%s: ", m.inc))
 	switch m.inc {
 	case weekly:
 		year, week := m.startDate.ISOWeek()
@@ -166,9 +167,13 @@ func (m DatePickerModel) View() string {
 	rightStr.WriteString(keyStyle.Render(m.byYear.Keys()[0]) + "early")
 
 	style := lipgloss.NewStyle().
-		Border(getRoundedBorderWithTitle(fmt.Sprintf("View by: %s", m.inc), m.width)).
+		Border(getRoundedBorderWithTitle(
+			fmt.Sprintf("Date range: %s - %s", m.startDate.Format("2006-01-02"), m.endDate.Format("2006-01-02")),
+			m.width,
+		)).
 		BorderForeground(borderColor).
 		Padding(0, 1).
+		Margin(1, 0, 0).
 		Width(m.width)
 	spaces := m.width - hPadding*2 - lipgloss.Width(leftStr.String()) - lipgloss.Width(rightStr.String())
 

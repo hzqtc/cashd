@@ -10,6 +10,7 @@ import (
 const (
 	datePickerHeight  = 5
 	searchInputHeight = 3
+	vSpacing          = 2
 )
 
 func (m Model) View() string {
@@ -25,7 +26,10 @@ func (m Model) View() string {
 		table,
 		m.summary.View(),
 	)
-	top := m.datePicker.View()
+	top := lipgloss.JoinHorizontal(lipgloss.Top,
+		m.datePicker.View(),
+		m.navBar.View(),
+	)
 	return lipgloss.JoinVertical(lipgloss.Left,
 		top,
 		body,
@@ -33,8 +37,10 @@ func (m Model) View() string {
 }
 
 func (m *Model) updateLayout() {
+	// TODO: Hide right side panel if not enough width
 	m.datePicker.SetWidth(ui.PreferredTableWidth)
 	m.searchInput.SetWidth(ui.PreferredTableWidth - 4)
-	m.transactionTable.SetDimensions(ui.PreferredTableWidth, m.height-datePickerHeight-searchInputHeight)
-	m.summary.SetDimensions(m.width-ui.PreferredTableWidth-4, m.height-datePickerHeight)
+	m.transactionTable.SetDimensions(ui.PreferredTableWidth, m.height-datePickerHeight-searchInputHeight-vSpacing)
+	m.summary.SetDimensions(m.width-ui.PreferredTableWidth-4, m.height-datePickerHeight-vSpacing)
+	m.navBar.SetWidth(m.width - ui.PreferredTableWidth - 4)
 }

@@ -28,6 +28,7 @@ type Model struct {
 
 	transactionTable ui.TransactionTableModel
 	datePicker       ui.DatePickerModel
+	navBar           ui.NavBarModel
 	summary          ui.SummaryModel
 	searchInput      ui.SearchInputModel
 
@@ -44,6 +45,7 @@ func NewModel() Model {
 	return Model{
 		transactionTable: ui.NewTransactionTableModel(),
 		datePicker:       ui.NewDatePickerModel(),
+		navBar:           ui.NewNavBarModel(),
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
 		quit:             key.NewBinding(key.WithKeys("q")),
