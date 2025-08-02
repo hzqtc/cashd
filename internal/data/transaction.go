@@ -9,6 +9,7 @@ import (
 type TransactionType string
 
 const (
+	// TODO: support more transaction types
 	Income  TransactionType = "Income"
 	Expense TransactionType = "Expense"
 )
@@ -18,9 +19,26 @@ const (
 	expensSymbol = ""
 )
 
+type AccountType string
+
+const (
+	// TODO: support more account types
+	AcctCash        AccountType = "Cash"
+	AcctBankAccount AccountType = "Bank Account"
+	AcctCreditCard  AccountType = "Credit Card"
+	AcctOverall     AccountType = ""
+)
+
+const (
+	cashSymbol = "󰄔"
+	bankSymbol = "󰁰"
+	cardSymbol = "󰆛"
+)
+
 type Transaction struct {
 	Date        time.Time
 	Type        TransactionType
+	AccountType AccountType
 	Account     string
 	Category    string
 	Amount      float64
@@ -33,6 +51,19 @@ func (t *Transaction) Symbol() string {
 		return incomeSymbol
 	case Expense:
 		return expensSymbol
+	default:
+		return ""
+	}
+}
+
+func (t *Transaction) AccountSymbol() string {
+	switch t.AccountType {
+	case AcctCash:
+		return cashSymbol
+	case AcctBankAccount:
+		return bankSymbol
+	case AcctCreditCard:
+		return cardSymbol
 	default:
 		return ""
 	}

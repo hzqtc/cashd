@@ -40,6 +40,7 @@ func parseJournal(reader io.ReadCloser) ([]*data.Transaction, error) {
 	var transactionType data.TransactionType
 	var transactionCategory string
 	var transactionAccount string
+	var accountType data.AccountType
 	var transactionAmount float64
 	var numPostings int
 
@@ -84,8 +85,16 @@ func parseJournal(reader io.ReadCloser) ([]*data.Transaction, error) {
 			case income:
 				transactionType = data.Income
 				transactionCategory = accountOrCategory
-			case assets, liability:
+			case assets:
 				transactionAccount = accountOrCategory
+				if strings.ToLower(transactionAccount) == "cash" {
+					accountType = data.AcctCash
+				} else {
+					accountType = data.AcctBankAccount
+				}
+			case liability:
+				transactionAccount = accountOrCategory
+				accountType = data.AcctCreditCard
 			}
 
 			// Currently only handling transactions that involves exactly 2 postings
@@ -95,6 +104,7 @@ func parseJournal(reader io.ReadCloser) ([]*data.Transaction, error) {
 					Date:        transactionDate,
 					Type:        transactionType,
 					Account:     transactionAccount,
+					AccountType: accountType,
 					Category:    transactionCategory,
 					Amount:      transactionAmount,
 					Description: transactionDesc,
