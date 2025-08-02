@@ -43,6 +43,10 @@ func (m *NavBarModel) SetWidth(w int) {
 	m.width = w
 }
 
+func (m *NavBarModel) ViewMode() ViewMode {
+	return m.viewMode
+}
+
 func (m NavBarModel) View() string {
 	var s strings.Builder
 	s.WriteString(fmt.Sprintf("%s %s", keyStyle.Render(m.navTransactionView.Keys()[0]), TransactionView))

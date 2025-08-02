@@ -21,8 +21,7 @@ type dataLoadingErrorMsg struct {
 }
 
 type Model struct {
-	allTransactions  []*data.Transaction
-	viewTransactions []*data.Transaction
+	allTransactions []*data.Transaction
 
 	errMsg string
 
@@ -31,6 +30,7 @@ type Model struct {
 	navBar           ui.NavBarModel
 	summary          ui.SummaryModel
 	searchInput      ui.SearchInputModel
+	accountTable     ui.AccountTableModel
 
 	globalQuit     key.Binding
 	quit           key.Binding
@@ -48,7 +48,7 @@ func NewModel() Model {
 		navBar:           ui.NewNavBarModel(),
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
-		quit:             key.NewBinding(key.WithKeys("q")),
+		accountTable:     ui.NewAccountTableModel(),
 		globalQuit:       key.NewBinding(key.WithKeys("ctrl+c")),
 		activateSearch:   key.NewBinding(key.WithKeys("/")),
 		clearSearch:      key.NewBinding(key.WithKeys("esc")),
@@ -69,24 +69,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, m.globalQuit) {
 			return m, tea.Quit
-		} else if m.searchInput.Focused() {
-			m.searchInput, cmd = m.searchInput.Update(msg)
-			cmds = append(cmds, cmd)
-		} else {
-			switch {
-			case key.Matches(msg, m.quit):
-				return m, tea.Quit
-			case key.Matches(msg, m.activateSearch):
-				m.searchInput.Focus()
-			case key.Matches(msg, m.clearSearch):
-				cmds = append(cmds, m.searchInput.Clear())
-			default:
-				m.transactionTable, cmd = m.transactionTable.Update(msg)
-				cmds = append(cmds, cmd)
-				m.datePicker, cmd = m.datePicker.Update(msg)
-				cmds = append(cmds, cmd)
-			}
+		} else if m.navBar.ViewMode() == ui.TransactionView {
+			cmds = append(cmds, m.processTransactionViewKeys(msg))
+		} else if m.navBar.ViewMode() == ui.AccountView {
+			cmds = append(cmds, m.processAccountViewKeys(msg))
+		} else if m.navBar.ViewMode() == ui.CategoryView {
 		}
+		// Global components always process key events
+		m.datePicker, cmd = m.datePicker.Update(msg)
+		cmds = append(cmds, cmd)
+		m.navBar, cmd = m.navBar.Update(msg)
+		cmds = append(cmds, cmd)
 	case dataLoadingSuccessMsg:
 		m.allTransactions = msg.transactions
 		m.filterTransactions()
@@ -106,6 +99,31 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m *Model) processTransactionViewKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	if m.searchInput.Focused() {
+		m.searchInput, cmd = m.searchInput.Update(msg)
+		return cmd
+	} else {
+		switch {
+		case key.Matches(msg, m.activateSearch):
+			m.searchInput.Focus()
+		case key.Matches(msg, m.clearSearch):
+			return m.searchInput.Clear()
+		default:
+			m.transactionTable, cmd = m.transactionTable.Update(msg)
+			return cmd
+		}
+	}
+	return nil
+}
+
+func (m *Model) processAccountViewKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	m.accountTable, cmd = m.accountTable.Update(msg)
+	return cmd
+}
+
 func (m *Model) filterTransactions() {
 	startDate, endDate := m.datePicker.SelectedDateRange()
 	// m.allTransactions are ordered by date, use binary search to find start, end index
@@ -122,17 +140,26 @@ func (m *Model) filterTransactions() {
 		panic(fmt.Sprintf("Invalid date range: %s - %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
 	}
 
-	m.viewTransactions = []*data.Transaction{}
+	// Transactions within date range
+	viewTransactions := []*data.Transaction{}
+	// Transactions matches the search query
+	matchingTransactions := []*data.Transaction{}
+	searchQuery := strings.ToLower(m.searchInput.Value())
+	keywords := strings.Fields(searchQuery)
 	for i := startIndex; i < endIndex; i++ {
-		searchQuery := strings.ToLower(m.searchInput.Value())
-		keywords := strings.Fields(searchQuery)
-		if t := m.allTransactions[i]; t.Matches(keywords) {
-			m.viewTransactions = append(m.viewTransactions, t)
+		t := m.allTransactions[i]
+		viewTransactions = append(viewTransactions, t)
+
+		if t.Matches(keywords) {
+			matchingTransactions = append(matchingTransactions, t)
 		}
 	}
 
-	m.transactionTable.SetTransactions(m.viewTransactions)
-	m.summary.SetTransactions(m.viewTransactions)
+	// Search query only applies to transaction view (transaction table & summary)
+	m.transactionTable.SetTransactions(matchingTransactions)
+	m.summary.SetTransactions(matchingTransactions)
+	// Other tables and views are not affected by search query
+	m.accountTable.SetTransactions(viewTransactions)
 }
 
 func loadTransactionsCmd() tea.Cmd {

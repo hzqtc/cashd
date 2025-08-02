@@ -51,7 +51,7 @@ func NewDatePickerModel() DatePickerModel {
 		prev:      key.NewBinding(key.WithKeys("h", "left")),
 		byWeek:    key.NewBinding(key.WithKeys("w")),
 		byMonth:   key.NewBinding(key.WithKeys("m")),
-		byQuarter: key.NewBinding(key.WithKeys("t")),
+		byQuarter: key.NewBinding(key.WithKeys("q")),
 		byYear:    key.NewBinding(key.WithKeys("y")),
 	}
 }
@@ -69,15 +69,27 @@ func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
 		case key.Matches(msg, m.next):
 			m.nextDateRange()
 		case key.Matches(msg, m.byWeek):
+			if m.inc == weekly {
+				return m, nil
+			}
 			m.inc = weekly
 			m.updateIncrement()
 		case key.Matches(msg, m.byMonth):
+			if m.inc == monthly {
+				return m, nil
+			}
 			m.inc = monthly
 			m.updateIncrement()
 		case key.Matches(msg, m.byQuarter):
+			if m.inc == quarterly {
+				return m, nil
+			}
 			m.inc = quarterly
 			m.updateIncrement()
 		case key.Matches(msg, m.byYear):
+			if m.inc == annually {
+				return m, nil
+			}
 			m.inc = annually
 			m.updateIncrement()
 		default:
@@ -162,7 +174,7 @@ func (m DatePickerModel) View() string {
 	rightStr.WriteString(" ")
 	rightStr.WriteString(keyStyle.Render(m.byMonth.Keys()[0]) + "onthly")
 	rightStr.WriteString(" ")
-	rightStr.WriteString("quar" + keyStyle.Render(m.byQuarter.Keys()[0]) + "erly")
+	rightStr.WriteString(keyStyle.Render(m.byQuarter.Keys()[0]) + "uarterly")
 	rightStr.WriteString(" ")
 	rightStr.WriteString(keyStyle.Render(m.byYear.Keys()[0]) + "early")
 
