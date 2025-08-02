@@ -8,59 +8,59 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type columnName int
+type txnColumn int
 
 const (
-	colSymbol columnName = iota
-	colDate
-	colType
-	colAccount
-	colCategory
-	colDesc
-	colAmount
+	txnColSymbol txnColumn = iota
+	txnColDate
+	txnColType
+	txnColAccount
+	txnColCategory
+	txnColDesc
+	txnColAmount
 
-	totalNumColumns
+	totalNumTxnColumns
 )
 
-func (c columnName) rightAligned() bool {
-	return c == colAmount
+func (c txnColumn) rightAligned() bool {
+	return c == txnColAmount
 }
 
-func (c columnName) String() string {
+func (c txnColumn) String() string {
 	switch c {
-	case colSymbol:
+	case txnColSymbol:
 		return " "
-	case colDate:
+	case txnColDate:
 		return "Date"
-	case colType:
+	case txnColType:
 		return "Type"
-	case colAccount:
+	case txnColAccount:
 		return "Account"
-	case colCategory:
+	case txnColCategory:
 		return "Category"
-	case colDesc:
+	case txnColDesc:
 		return "Description"
-	case colAmount:
+	case txnColAmount:
 		return "Amount"
 	default:
 		return "Unknown"
 	}
 }
 
-var colWidthMap = map[columnName]int{
-	colSymbol:   2,
-	colDate:     12,
-	colType:     10,
-	colAccount:  25,
-	colCategory: 15,
-	colDesc:     20,
-	colAmount:   12,
+var txnColWidthMap = map[txnColumn]int{
+	txnColSymbol:   2,
+	txnColDate:     12,
+	txnColType:     10,
+	txnColAccount:  25,
+	txnColCategory: 15,
+	txnColDesc:     20,
+	txnColAmount:   12,
 }
 
-var PreferredTableWidth = func() int {
+var TxnTableWidth = func() int {
 	tableWidth := 0
-	for i := range totalNumColumns {
-		tableWidth += colWidthMap[columnName(i)] + 2
+	for i := range totalNumTxnColumns {
+		tableWidth += txnColWidthMap[txnColumn(i)] + 2
 	}
 	return tableWidth
 }()
@@ -71,10 +71,10 @@ type TransactionTableModel struct {
 
 func NewTransactionTableModel() TransactionTableModel {
 	columns := []table.Column{}
-	for i := range int(totalNumColumns) {
-		col := columnName(i)
+	for i := range int(totalNumTxnColumns) {
+		col := txnColumn(i)
 		title := col.String()
-		width := colWidthMap[col]
+		width := txnColWidthMap[col]
 		if col.rightAligned() {
 			title = fmt.Sprintf("%*s", width, title)
 		}
@@ -108,11 +108,11 @@ func (m *TransactionTableModel) SetTransactions(transactions []*data.Transaction
 	rows := make([]table.Row, len(transactions))
 	for i, tx := range transactions {
 		rowData := []string{}
-		for i := range int(totalNumColumns) {
-			col := columnName(i)
-			colData := getColData(tx, col)
+		for i := range int(totalNumTxnColumns) {
+			col := txnColumn(i)
+			colData := getTxnColData(tx, col)
 			if col.rightAligned() {
-				colData = fmt.Sprintf("%*s", colWidthMap[col], colData)
+				colData = fmt.Sprintf("%*s", txnColWidthMap[col], colData)
 			}
 			rowData = append(rowData, colData)
 		}
@@ -121,21 +121,21 @@ func (m *TransactionTableModel) SetTransactions(transactions []*data.Transaction
 	m.table.SetRows(rows)
 }
 
-func getColData(tx *data.Transaction, col columnName) string {
+func getTxnColData(tx *data.Transaction, col txnColumn) string {
 	switch col {
-	case colSymbol:
+	case txnColSymbol:
 		return tx.Symbol()
-	case colDate:
+	case txnColDate:
 		return tx.Date.Format("2006/01/02")
-	case colType:
+	case txnColType:
 		return string(tx.Type)
-	case colAccount:
+	case txnColAccount:
 		return tx.Account
-	case colCategory:
+	case txnColCategory:
 		return tx.Category
-	case colDesc:
+	case txnColDesc:
 		return tx.Description
-	case colAmount:
+	case txnColAmount:
 		return fmt.Sprintf("$%.2f", tx.Amount)
 	default:
 		return ""

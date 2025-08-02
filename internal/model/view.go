@@ -38,9 +38,9 @@ func (m Model) View() string {
 
 func (m *Model) updateLayout() {
 	// TODO: Hide right side panel if not enough width
-	m.datePicker.SetWidth(ui.PreferredTableWidth)
-	m.searchInput.SetWidth(ui.PreferredTableWidth - 4)
-	m.transactionTable.SetDimensions(ui.PreferredTableWidth, m.height-datePickerHeight-searchInputHeight-vSpacing)
-	m.summary.SetDimensions(m.width-ui.PreferredTableWidth-4, m.height-datePickerHeight-vSpacing)
-	m.navBar.SetWidth(m.width - ui.PreferredTableWidth - 4)
+	m.datePicker.SetWidth(ui.TxnTableWidth)
+	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
+	m.transactionTable.SetDimensions(ui.TxnTableWidth, m.height-datePickerHeight-searchInputHeight-vSpacing)
+	m.summary.SetDimensions(m.width-ui.TxnTableWidth-4, m.height-datePickerHeight-vSpacing)
+	m.navBar.SetWidth(m.width - ui.TxnTableWidth - 4)
 }
