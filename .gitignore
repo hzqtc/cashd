@@ -1,2 +1,4 @@
 release/
+.crush/
 cashd
+CRUSH.md
