@@ -15,7 +15,7 @@ const (
 	barChartHeight = 1
 )
 
-type entry struct {
+type summaryEntry struct {
 	key   string
 	value float64
 }
@@ -28,10 +28,10 @@ type SummaryModel struct {
 	totalIncome  float64
 	totalExpense float64
 
-	topIncomeCategories  []entry
-	topIncomeAccounts    []entry
-	topExpenseCategories []entry
-	topExpenseAccounts   []entry
+	topIncomeCategories  []summaryEntry
+	topIncomeAccounts    []summaryEntry
+	topExpenseCategories []summaryEntry
+	topExpenseAccounts   []summaryEntry
 
 	incomeCategoryChart  barchart.Model
 	incomeAccountChart   barchart.Model
@@ -96,25 +96,23 @@ func (m *SummaryModel) resizeCharts() {
 }
 
 func (m SummaryModel) View() string {
-	if len(m.transactions) == 0 {
-		return ""
-	}
-
 	var s strings.Builder
 	s.WriteString(fmt.Sprintf("Total income: $%.2f\n", m.totalIncome))
 	s.WriteString(fmt.Sprintf("Total expenses: $%.2f\n", m.totalExpense))
 
-	s.WriteString("\nTop income categories:\n")
-	s.WriteString(m.renderSummarySection(m.topIncomeCategories, m.incomeCategoryChart))
+	if len(m.transactions) > 0 {
+		s.WriteString("\nTop income categories:\n")
+		s.WriteString(m.renderSummarySection(m.topIncomeCategories, m.incomeCategoryChart))
 
-	s.WriteString("\n\nTop income accounts:\n")
-	s.WriteString(m.renderSummarySection(m.topIncomeAccounts, m.incomeAccountChart))
+		s.WriteString("\n\nTop income accounts:\n")
+		s.WriteString(m.renderSummarySection(m.topIncomeAccounts, m.incomeAccountChart))
 
-	s.WriteString("\n\nTop expense catgories:\n")
-	s.WriteString(m.renderSummarySection(m.topExpenseCategories, m.expenseCategoryChart))
+		s.WriteString("\n\nTop expense catgories:\n")
+		s.WriteString(m.renderSummarySection(m.topExpenseCategories, m.expenseCategoryChart))
 
-	s.WriteString("\n\nTop expense accounts:\n")
-	s.WriteString(m.renderSummarySection(m.topExpenseAccounts, m.expenseAccountChart))
+		s.WriteString("\n\nTop expense accounts:\n")
+		s.WriteString(m.renderSummarySection(m.topExpenseAccounts, m.expenseAccountChart))
+	}
 
 	return lipgloss.NewStyle().
 		Border(getRoundedBorderWithTitle("Summary", m.width)).
@@ -125,7 +123,7 @@ func (m SummaryModel) View() string {
 		Render(s.String())
 }
 
-func (m SummaryModel) getTopCategories(txnType data.TransactionType) ([]entry, barchart.Model) {
+func (m SummaryModel) getTopCategories(txnType data.TransactionType) ([]summaryEntry, barchart.Model) {
 	expenseByCategory := make(map[string]float64)
 	for _, tx := range m.transactions {
 		if tx.Type == txnType {
@@ -137,7 +135,7 @@ func (m SummaryModel) getTopCategories(txnType data.TransactionType) ([]entry, b
 	return entries, getBarChartModel(m.width-2*hPadding, entries)
 }
 
-func (m SummaryModel) getTopAccounts(txnType data.TransactionType) ([]entry, barchart.Model) {
+func (m SummaryModel) getTopAccounts(txnType data.TransactionType) ([]summaryEntry, barchart.Model) {
 	expenseByAccount := make(map[string]float64)
 	for _, tx := range m.transactions {
 		if tx.Type == txnType {
@@ -150,10 +148,10 @@ func (m SummaryModel) getTopAccounts(txnType data.TransactionType) ([]entry, bar
 }
 
 // Sort by value in reverse order and keep the top 5 entries
-func sortAndTruncate(input map[string]float64) []entry {
-	var sorted []entry
+func sortAndTruncate(input map[string]float64) []summaryEntry {
+	var sorted []summaryEntry
 	for k, v := range input {
-		sorted = append(sorted, entry{k, v})
+		sorted = append(sorted, summaryEntry{k, v})
 	}
 	sort.Slice(sorted, func(i, j int) bool {
 		return sorted[i].value > sorted[j].value
@@ -167,7 +165,7 @@ func sortAndTruncate(input map[string]float64) []entry {
 		// Keep the first 4 items as-is
 		sorted = sorted[:4]
 		// Add Everything else as the 5th item
-		sorted = append(sorted, entry{"Everything else", sumOfRemaining})
+		sorted = append(sorted, summaryEntry{"Everything else", sumOfRemaining})
 	}
 
 	if len(sorted) > 5 {
@@ -177,7 +175,7 @@ func sortAndTruncate(input map[string]float64) []entry {
 	return sorted
 }
 
-func getBarChartModel(width int, data []entry) barchart.Model {
+func getBarChartModel(width int, data []summaryEntry) barchart.Model {
 	barValues := []barchart.BarValue{}
 	for i, item := range data {
 		barValues = append(barValues, barchart.BarValue{Name: item.key, Value: item.value, Style: barStyles[i]})
@@ -191,7 +189,7 @@ func getBarChartModel(width int, data []entry) barchart.Model {
 	)
 }
 
-func (m SummaryModel) renderSummarySection(data []entry, chart barchart.Model) string {
+func (m SummaryModel) renderSummarySection(data []summaryEntry, chart barchart.Model) string {
 	var s strings.Builder
 	for i, item := range data {
 		s.WriteString(fmt.Sprintf(
