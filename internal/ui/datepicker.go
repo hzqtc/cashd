@@ -142,18 +142,7 @@ func (m DatePickerModel) View() string {
 	var leftStr strings.Builder
 	var rightStr strings.Builder
 
-	leftStr.WriteString(fmt.Sprintf("%s: ", m.inc))
-	switch m.inc {
-	case date.Weekly:
-		year, week := m.startDate.ISOWeek()
-		leftStr.WriteString(fmt.Sprintf("< %d week %02d >", year, week))
-	case date.Monthly:
-		leftStr.WriteString(fmt.Sprintf("< %s >", m.startDate.Format("January 2006")))
-	case date.Quarterly:
-		leftStr.WriteString(fmt.Sprintf("< %d Q%d >", m.startDate.Year(), date.QuarterOfYear(m.startDate)))
-	case date.Annually:
-		leftStr.WriteString(fmt.Sprintf("< %d >", m.startDate.Year()))
-	}
+	leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, date.FormatDateToIncrement(m.startDate, m.inc)))
 
 	// Key bindings
 	rightStr.WriteString("Navigate: ")

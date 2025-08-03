@@ -39,16 +39,6 @@ type SummaryModel struct {
 	expenseAccountChart  barchart.Model
 }
 
-var (
-	barStyles = [5]lipgloss.Style{
-		lipgloss.NewStyle().Foreground(chartColor1).Background(chartColor1),
-		lipgloss.NewStyle().Foreground(chartColor2).Background(chartColor2),
-		lipgloss.NewStyle().Foreground(chartColor3).Background(chartColor3),
-		lipgloss.NewStyle().Foreground(chartColor4).Background(chartColor4),
-		lipgloss.NewStyle().Foreground(chartColor5).Background(chartColor5),
-	}
-)
-
 func NewSummaryModel() SummaryModel {
 	return SummaryModel{}
 }

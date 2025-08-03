@@ -1,6 +1,9 @@
 package date
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Increment string
 
@@ -47,4 +50,19 @@ func QuarterOfYear(date time.Time) int {
 
 func FirstDayOfYear(refDate time.Time) time.Time {
 	return time.Date(refDate.Year(), 1, 1, 0, 0, 0, 0, refDate.Location())
+}
+
+func FormatDateToIncrement(date time.Time, inc Increment) string {
+	switch inc {
+	case Weekly:
+		year, week := date.ISOWeek()
+		return fmt.Sprintf("%d week %02d", year, week)
+	case Monthly:
+		return fmt.Sprintf("%s", date.Format("January 2006"))
+	case Quarterly:
+		return fmt.Sprintf("%d Q%d", date.Year(), QuarterOfYear(date))
+	case Annually:
+		return fmt.Sprintf("%d", date.Year())
+	}
+	panic(fmt.Sprintf("Unexpected date increment: %s", inc))
 }
