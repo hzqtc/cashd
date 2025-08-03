@@ -51,9 +51,10 @@ func NewModel() Model {
 		searchInput:      ui.NewSearchInputModel(),
 		accountTable:     ui.NewAccountTableModel(),
 		categoryTable:    ui.NewCategoryTableModel(),
-		globalQuit:       key.NewBinding(key.WithKeys("ctrl+c")),
-		activateSearch:   key.NewBinding(key.WithKeys("/")),
-		clearSearch:      key.NewBinding(key.WithKeys("esc")),
+
+		globalQuit:     key.NewBinding(key.WithKeys("ctrl+c")),
+		activateSearch: key.NewBinding(key.WithKeys("/")),
+		clearSearch:    key.NewBinding(key.WithKeys("esc")),
 	}
 }
 
@@ -89,7 +90,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case dataLoadingErrorMsg:
 		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
-		// This message comes from the date picker when the date range changes
 		m.filterTransactions()
 	case ui.SearchMsg:
 		m.filterTransactions()
@@ -104,15 +104,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) processTransactionViewKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmd tea.Cmd
-	if m.searchInput.Focused() {
+
+	if key.Matches(msg, m.clearSearch) {
+		m.searchInput.Blur()
+		return m.searchInput.Clear()
+	} else if m.searchInput.Focused() {
 		m.searchInput, cmd = m.searchInput.Update(msg)
 		return cmd
 	} else {
 		switch {
 		case key.Matches(msg, m.activateSearch):
 			m.searchInput.Focus()
-		case key.Matches(msg, m.clearSearch):
-			return m.searchInput.Clear()
 		default:
 			m.transactionTable, cmd = m.transactionTable.Update(msg)
 			return cmd
