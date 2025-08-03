@@ -91,8 +91,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
 		m.filterTransactions()
+	case ui.DateIncrementChangedMsg:
+		// TODO: Update time series charts
 	case ui.SearchMsg:
 		m.filterTransactions()
+	case ui.NavigationMsg:
+		// Handled in view.go
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height

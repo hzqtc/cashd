@@ -31,6 +31,10 @@ type DateRangeChangedMsg struct {
 	End   time.Time // Exclusive
 }
 
+type DateIncrementChangedMsg struct {
+	Inc date.Increment
+}
+
 func NewDatePickerModel() DatePickerModel {
 	now := time.Now()
 	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
@@ -53,58 +57,48 @@ func (m *DatePickerModel) SetWidth(w int) {
 }
 
 func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.prev):
-			m.prevDateRange()
+			cmd = m.prevDateRange()
 		case key.Matches(msg, m.next):
-			m.nextDateRange()
+			cmd = m.nextDateRange()
 		case key.Matches(msg, m.byWeek):
 			if m.inc == date.Weekly {
 				return m, nil
 			}
 			m.inc = date.Weekly
-			m.updateIncrement()
+			cmd = m.updateIncrement()
 		case key.Matches(msg, m.byMonth):
 			if m.inc == date.Monthly {
 				return m, nil
 			}
 			m.inc = date.Monthly
-			m.updateIncrement()
+			cmd = m.updateIncrement()
 		case key.Matches(msg, m.byQuarter):
 			if m.inc == date.Quarterly {
 				return m, nil
 			}
 			m.inc = date.Quarterly
-			m.updateIncrement()
+			cmd = m.updateIncrement()
 		case key.Matches(msg, m.byYear):
 			if m.inc == date.Annually {
 				return m, nil
 			}
 			m.inc = date.Annually
-			m.updateIncrement()
-		default:
-			// Important to return nil cmd if nothing is changed
-			return m, nil
-		}
-	default:
-		// Important to return nil cmd if nothing is changed
-		return m, nil
-	}
-	return m, func() tea.Msg {
-		return DateRangeChangedMsg{
-			Start: m.startDate,
-			End:   m.endDate,
+			cmd = m.updateIncrement()
 		}
 	}
+	return m, cmd
 }
 
 func (m *DatePickerModel) SelectedDateRange() (time.Time, time.Time) {
 	return m.startDate, m.endDate
 }
 
-func (m *DatePickerModel) nextDateRange() {
+func (m *DatePickerModel) nextDateRange() tea.Cmd {
 	switch m.inc {
 	case date.Weekly:
 		m.startDate = m.startDate.AddDate(0, 0, 7)
@@ -119,9 +113,11 @@ func (m *DatePickerModel) nextDateRange() {
 		m.startDate = m.startDate.AddDate(1, 0, 0)
 		m.endDate = m.endDate.AddDate(1, 0, 0)
 	}
+
+	return m.sendDateRangeChangedMsg()
 }
 
-func (m *DatePickerModel) prevDateRange() {
+func (m *DatePickerModel) prevDateRange() tea.Cmd {
 	switch m.inc {
 	case date.Weekly:
 		m.startDate = m.startDate.AddDate(0, 0, -7)
@@ -136,6 +132,8 @@ func (m *DatePickerModel) prevDateRange() {
 		m.startDate = m.startDate.AddDate(-1, 0, 0)
 		m.endDate = m.endDate.AddDate(-1, 0, 0)
 	}
+
+	return m.sendDateRangeChangedMsg()
 }
 
 func (m DatePickerModel) View() string {
@@ -174,7 +172,7 @@ func (m DatePickerModel) View() string {
 		Render(leftStr.String() + strings.Repeat(" ", max(0, spaces)) + rightStr.String())
 }
 
-func (m *DatePickerModel) updateIncrement() {
+func (m *DatePickerModel) updateIncrement() tea.Cmd {
 	// Snap start and end dates to increment
 	switch m.inc {
 	case date.Weekly:
@@ -189,5 +187,23 @@ func (m *DatePickerModel) updateIncrement() {
 	case date.Annually:
 		m.startDate = date.FirstDayOfYear(m.startDate)
 		m.endDate = m.startDate.AddDate(1, 0, 0)
+	}
+
+	return tea.Batch(m.sendIncrementChangedMsg(), m.sendDateRangeChangedMsg())
+}
+
+func (m *DatePickerModel) sendDateRangeChangedMsg() tea.Cmd {
+	return func() tea.Msg {
+		return DateRangeChangedMsg{
+			Start: m.startDate,
+			End:   m.endDate,
+		}
+	}
+}
+func (m *DatePickerModel) sendIncrementChangedMsg() tea.Cmd {
+	return func() tea.Msg {
+		return DateIncrementChangedMsg{
+			Inc: m.inc,
+		}
 	}
 }

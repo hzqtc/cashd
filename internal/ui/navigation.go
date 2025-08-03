@@ -67,24 +67,34 @@ func (m NavBarModel) View() string {
 }
 
 func (m NavBarModel) Update(msg tea.Msg) (NavBarModel, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.navTransactionView):
+			if m.viewMode == TransactionView {
+				break
+			}
 			m.viewMode = TransactionView
-			return m, m.getNavMsg()
+			cmd = m.sendNavMsg()
 		case key.Matches(msg, m.navAccountView):
+			if m.viewMode == AccountView {
+				break
+			}
 			m.viewMode = AccountView
-			return m, m.getNavMsg()
+			cmd = m.sendNavMsg()
 		case key.Matches(msg, m.navCategoryView):
+			if m.viewMode == CategoryView {
+				break
+			}
 			m.viewMode = CategoryView
-			return m, m.getNavMsg()
+			cmd = m.sendNavMsg()
 		}
 	}
-	return m, nil
+	return m, cmd
 }
 
-func (m *NavBarModel) getNavMsg() tea.Cmd {
+func (m *NavBarModel) sendNavMsg() tea.Cmd {
 	return func() tea.Msg {
 		return NavigationMsg{
 			viewMode: m.viewMode,

@@ -51,7 +51,7 @@ func (m *SearchInputModel) Value() string {
 
 func (m *SearchInputModel) Clear() tea.Cmd {
 	m.input.SetValue("")
-	return m.getSearchMsg()
+	return m.sendSearchMsg()
 }
 
 func (m SearchInputModel) View() string {
@@ -66,10 +66,10 @@ func (m SearchInputModel) Update(msg tea.Msg) (SearchInputModel, tea.Cmd) {
 		case key.Matches(msg, m.cancelSearch):
 			m.input.SetValue("")
 			m.input.Blur()
-			cmd = m.getSearchMsg()
+			cmd = m.sendSearchMsg()
 		case key.Matches(msg, m.search):
 			m.input.Blur()
-			cmd = m.getSearchMsg()
+			cmd = m.sendSearchMsg()
 		default:
 			m.input, cmd = m.input.Update(msg)
 		}
@@ -79,7 +79,7 @@ func (m SearchInputModel) Update(msg tea.Msg) (SearchInputModel, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *SearchInputModel) getSearchMsg() tea.Cmd {
+func (m *SearchInputModel) sendSearchMsg() tea.Cmd {
 	return func() tea.Msg {
 		return SearchMsg{
 			query: m.input.Value(),
