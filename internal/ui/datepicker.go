@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cashd/internal/date"
 	"fmt"
 	"strings"
 	"time"
@@ -10,21 +11,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type increment string
-
-const (
-	weekly    increment = "Weekly"
-	monthly   increment = "Monthly"
-	quarterly increment = "Quarterly"
-	annually  increment = "Yearly"
-)
-
 type DatePickerModel struct {
 	width int
 
 	startDate time.Time // Inclusive
 	endDate   time.Time // Exclusive
-	inc       increment
+	inc       date.Increment
 
 	next      key.Binding
 	prev      key.Binding
@@ -46,7 +38,7 @@ func NewDatePickerModel() DatePickerModel {
 		// First day of the month
 		startDate: currentMonth,
 		endDate:   currentMonth.AddDate(0, 1, 0),
-		inc:       monthly,
+		inc:       date.Monthly,
 		next:      key.NewBinding(key.WithKeys("l", "right")),
 		prev:      key.NewBinding(key.WithKeys("h", "left")),
 		byWeek:    key.NewBinding(key.WithKeys("w")),
@@ -69,28 +61,28 @@ func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
 		case key.Matches(msg, m.next):
 			m.nextDateRange()
 		case key.Matches(msg, m.byWeek):
-			if m.inc == weekly {
+			if m.inc == date.Weekly {
 				return m, nil
 			}
-			m.inc = weekly
+			m.inc = date.Weekly
 			m.updateIncrement()
 		case key.Matches(msg, m.byMonth):
-			if m.inc == monthly {
+			if m.inc == date.Monthly {
 				return m, nil
 			}
-			m.inc = monthly
+			m.inc = date.Monthly
 			m.updateIncrement()
 		case key.Matches(msg, m.byQuarter):
-			if m.inc == quarterly {
+			if m.inc == date.Quarterly {
 				return m, nil
 			}
-			m.inc = quarterly
+			m.inc = date.Quarterly
 			m.updateIncrement()
 		case key.Matches(msg, m.byYear):
-			if m.inc == annually {
+			if m.inc == date.Annually {
 				return m, nil
 			}
-			m.inc = annually
+			m.inc = date.Annually
 			m.updateIncrement()
 		default:
 			// Important to return nil cmd if nothing is changed
@@ -114,16 +106,16 @@ func (m *DatePickerModel) SelectedDateRange() (time.Time, time.Time) {
 
 func (m *DatePickerModel) nextDateRange() {
 	switch m.inc {
-	case weekly:
+	case date.Weekly:
 		m.startDate = m.startDate.AddDate(0, 0, 7)
 		m.endDate = m.endDate.AddDate(0, 0, 7)
-	case monthly:
+	case date.Monthly:
 		m.startDate = m.startDate.AddDate(0, 1, 0)
 		m.endDate = m.endDate.AddDate(0, 1, 0)
-	case quarterly:
+	case date.Quarterly:
 		m.startDate = m.startDate.AddDate(0, 3, 0)
 		m.endDate = m.endDate.AddDate(0, 3, 0)
-	case annually:
+	case date.Annually:
 		m.startDate = m.startDate.AddDate(1, 0, 0)
 		m.endDate = m.endDate.AddDate(1, 0, 0)
 	}
@@ -131,16 +123,16 @@ func (m *DatePickerModel) nextDateRange() {
 
 func (m *DatePickerModel) prevDateRange() {
 	switch m.inc {
-	case weekly:
+	case date.Weekly:
 		m.startDate = m.startDate.AddDate(0, 0, -7)
 		m.endDate = m.endDate.AddDate(0, 0, -7)
-	case monthly:
+	case date.Monthly:
 		m.startDate = m.startDate.AddDate(0, -1, 0)
 		m.endDate = m.endDate.AddDate(0, -1, 0)
-	case quarterly:
+	case date.Quarterly:
 		m.startDate = m.startDate.AddDate(0, -3, 0)
 		m.endDate = m.endDate.AddDate(0, -3, 0)
-	case annually:
+	case date.Annually:
 		m.startDate = m.startDate.AddDate(-1, 0, 0)
 		m.endDate = m.endDate.AddDate(-1, 0, 0)
 	}
@@ -152,14 +144,14 @@ func (m DatePickerModel) View() string {
 
 	leftStr.WriteString(fmt.Sprintf("%s: ", m.inc))
 	switch m.inc {
-	case weekly:
+	case date.Weekly:
 		year, week := m.startDate.ISOWeek()
 		leftStr.WriteString(fmt.Sprintf("< %d week %02d >", year, week))
-	case monthly:
+	case date.Monthly:
 		leftStr.WriteString(fmt.Sprintf("< %s >", m.startDate.Format("January 2006")))
-	case quarterly:
-		leftStr.WriteString(fmt.Sprintf("< %d Q%d >", m.startDate.Year(), quarterOfYear(m.startDate)))
-	case annually:
+	case date.Quarterly:
+		leftStr.WriteString(fmt.Sprintf("< %d Q%d >", m.startDate.Year(), date.QuarterOfYear(m.startDate)))
+	case date.Annually:
 		leftStr.WriteString(fmt.Sprintf("< %d >", m.startDate.Year()))
 	}
 
@@ -196,55 +188,17 @@ func (m DatePickerModel) View() string {
 func (m *DatePickerModel) updateIncrement() {
 	// Snap start and end dates to increment
 	switch m.inc {
-	case weekly:
-		m.startDate = firstDayOfWeek(m.startDate)
+	case date.Weekly:
+		m.startDate = date.FirstDayOfWeek(m.startDate)
 		m.endDate = m.startDate.AddDate(0, 0, 7)
-	case monthly:
-		m.startDate = firstDayOfMonth(m.startDate)
+	case date.Monthly:
+		m.startDate = date.FirstDayOfMonth(m.startDate)
 		m.endDate = m.startDate.AddDate(0, 1, 0)
-	case quarterly:
-		m.startDate = firstDayOfQuarter(m.startDate)
+	case date.Quarterly:
+		m.startDate = date.FirstDayOfQuarter(m.startDate)
 		m.endDate = m.startDate.AddDate(0, 3, 0)
-	case annually:
-		m.startDate = firstDayOfYear(m.startDate)
+	case date.Annually:
+		m.startDate = date.FirstDayOfYear(m.startDate)
 		m.endDate = m.startDate.AddDate(1, 0, 0)
 	}
-}
-
-func firstDayOfWeek(refDate time.Time) time.Time {
-	year, week := refDate.ISOWeek()
-
-	// ISO 8601: Week 1 is the week with the first Thursday of the year
-	// Start with Jan 4th (guaranteed to be in week 1)
-	jan4 := time.Date(year, time.January, 4, 0, 0, 0, 0, time.UTC)
-
-	// Get the ISO weekday of Jan 4th (Monday=1, Sunday=7)
-	isoWeekday := int(jan4.Weekday())
-	if isoWeekday == 0 {
-		isoWeekday = 7
-	}
-
-	// Go back to Monday of that week
-	monday := jan4.AddDate(0, 0, -isoWeekday+1)
-
-	// Add (week - 1) weeks
-	return monday.AddDate(0, 0, (week-1)*7)
-}
-
-func firstDayOfMonth(refDate time.Time) time.Time {
-	return time.Date(refDate.Year(), refDate.Month(), 1, 0, 0, 0, 0, refDate.Location())
-}
-
-func firstDayOfQuarter(refDate time.Time) time.Time {
-	quarter := quarterOfYear(refDate)
-	firstMonthOfQuarter := quarter*3 - 2
-	return time.Date(refDate.Year(), time.Month(firstMonthOfQuarter), 1, 0, 0, 0, 0, refDate.Location())
-}
-
-func quarterOfYear(date time.Time) int {
-	return (int(date.Month())-1)/3 + 1
-}
-
-func firstDayOfYear(refDate time.Time) time.Time {
-	return time.Date(refDate.Year(), 1, 1, 0, 0, 0, 0, refDate.Location())
 }
