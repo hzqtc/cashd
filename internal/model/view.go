@@ -72,8 +72,8 @@ func (m *Model) updateLayout() {
 	m.summary.SetDimensions(summaryPanelWidth, bodyHeight)
 	// Account view components
 	m.accountTable.SetDimensions(ui.AccountTableWidth, bodyHeight)
-	m.accountChart.SetDimension(m.width-ui.AccountTableWidth-4, bodyHeight)
+	m.accountChart.SetDimension(max(50, m.width-ui.AccountTableWidth-6), bodyHeight)
 	// Category view components
 	m.categoryTable.SetDimensions(ui.CategoryTableWidth, bodyHeight)
-	m.categoryChart.SetDimension(m.width-ui.CategoryTableWidth-4, bodyHeight)
+	m.categoryChart.SetDimension(max(50, m.width-ui.CategoryTableWidth-6), bodyHeight)
 }

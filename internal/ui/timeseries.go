@@ -9,7 +9,6 @@ import (
 	"github.com/NimbleMarkets/ntcharts/canvas/runes"
 	"github.com/NimbleMarkets/ntcharts/linechart"
 	tschart "github.com/NimbleMarkets/ntcharts/linechart/timeserieslinechart"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -67,17 +66,17 @@ func (m *TimeSeriesChartModel) redraw() {
 		m.height,
 		tschart.WithYRange(0, maxValue),
 		tschart.WithAxesStyles(tsChartAxisStyle, tsChartLabelStyle),
-		tschart.WithDataSetStyle(string(data.Income), tsChartIncomeLineStyle),    // Income style
-		tschart.WithDataSetLineStyle(string(data.Income), runes.ThinLineStyle),   // Income line style
-		tschart.WithDataSetStyle(string(data.Expense), tsChartExpenseLineStyle),  // Expense style
-		tschart.WithDataSetLineStyle(string(data.Expense), runes.ArcLineStyle),   // Expense line style
-		tschart.WithUpdateHandler(tschart.DateNoZoomUpdateHandler(m.inc.Days())), // No zoom, just scroll on the X axis
+		tschart.WithDataSetStyle(string(data.Income), tsChartIncomeLineStyle),   // Income style
+		tschart.WithDataSetLineStyle(string(data.Income), runes.ThinLineStyle),  // Income line style
+		tschart.WithDataSetStyle(string(data.Expense), tsChartExpenseLineStyle), // Expense style
+		tschart.WithDataSetLineStyle(string(data.Expense), runes.ArcLineStyle),  // Expense line style
 		// TODO: use a custom label formatter that adapts to m.inc
 		tschart.WithXLabelFormatter(tschart.DateTimeLabelFormatter()),
 		tschart.WithYLabelFormatter(moneyAmountFormatter()),
 	)
 
 	// Push data to the respective datasets
+	// TODO: add line legend
 	for _, entry := range m.entries {
 		m.chart.PushDataSet(string(data.Income), tschart.TimePoint{Time: entry.Date, Value: entry.Income})
 		m.chart.PushDataSet(string(data.Expense), tschart.TimePoint{Time: entry.Date, Value: entry.Expense})
@@ -86,14 +85,9 @@ func (m *TimeSeriesChartModel) redraw() {
 	m.chart.DrawAll()
 }
 
-func (m TimeSeriesChartModel) Update(msg tea.Msg) (TimeSeriesChartModel, tea.Cmd) {
-	// TODO: add key msg handling (scoll the chart)
-	return m, nil
-}
-
 func (m TimeSeriesChartModel) View() string {
 	return lipgloss.NewStyle().
-		Border(getRoundedBorderWithTitle(m.name, m.width)).
+		Border(getRoundedBorderWithTitle(m.name, m.width+hPadding*2)).
 		BorderForeground(borderColor).
 		Padding(vPadding, hPadding).
 		Render(m.chart.View())
