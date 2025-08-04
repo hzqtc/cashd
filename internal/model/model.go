@@ -91,13 +91,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case dataLoadingSuccessMsg:
 		m.allTransactions = msg.transactions
 		m.filterTransactions()
-		m.updateTimeSeriesCharts()
+		m.updateAccountTimeSeriesCharts()
+		m.updateCategoryTimeSeriesCharts()
 	case dataLoadingErrorMsg:
 		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
 		m.filterTransactions()
 	case ui.DateIncrementChangedMsg:
-		m.updateTimeSeriesCharts()
+		m.updateAccountTimeSeriesCharts()
+		m.updateCategoryTimeSeriesCharts()
+	case ui.AccountTableSelectionChangedMsg:
+		m.updateAccountTimeSeriesCharts()
+	case ui.CategoryTableSelectionChangedMsg:
+		m.updateCategoryTimeSeriesCharts()
 	case ui.SearchMsg:
 		m.filterTransactions()
 	case ui.NavigationMsg:
@@ -160,6 +166,7 @@ func (m *Model) filterTransactions() {
 		panic(fmt.Sprintf("Invalid date range: %s - %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
 	}
 
+	// TODO: separate date range change and search change handling
 	// Transactions within date range
 	viewTransactions := []*data.Transaction{}
 	// Transactions matches the search query
@@ -179,18 +186,41 @@ func (m *Model) filterTransactions() {
 	m.transactionTable.SetTransactions(matchingTransactions)
 	m.summary.SetTransactions(matchingTransactions)
 	// Other tables and views are not affected by search query
+	prevAccount := m.accountTable.SelectedAccount()
+	prevCategory := m.categoryTable.SelectedCategory()
 	m.accountTable.SetTransactions(viewTransactions)
 	m.categoryTable.SetTransactions(viewTransactions)
+	// TODO: Make (account|category) table.SetTransactions trigger selection changed msg
+	if m.accountTable.SelectedAccount() != prevAccount {
+		m.updateAccountTimeSeriesCharts()
+	}
+	if m.categoryTable.SelectedCategory() != prevCategory {
+		m.updateCategoryTimeSeriesCharts()
+	}
 }
 
-func (m *Model) updateTimeSeriesCharts() {
-	// TODO: Update chart based on selection in accountTable and categoryTable
+func (m *Model) updateAccountTimeSeriesCharts() {
+	if m.accountTable.SelectedAccount() == "" {
+		return
+	}
 	m.accountChart.SetEntries(
-		"All accounts income and expenses",
-		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), "Total"),
+		fmt.Sprintf("%s: %s", m.accountTable.SelectedAccount(), m.datePicker.Inc()),
+		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.SelectedAccount()),
 		m.datePicker.Inc(),
 	)
-	// TODO: add category time series chart
+	// TODO: scroll chart to the selected date in datepicker
+}
+
+func (m *Model) updateCategoryTimeSeriesCharts() {
+	if m.categoryTable.SelectedCategory() == "" {
+		return
+	}
+	m.categoryChart.SetEntries(
+		fmt.Sprintf("%s: %s", m.categoryTable.SelectedCategory(), m.datePicker.Inc()),
+		aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.SelectedCategory()),
+		m.datePicker.Inc(),
+	)
+	// TODO: scroll chart to the selected date in datepicker
 }
 
 func loadTransactionsCmd() tea.Cmd {

@@ -17,7 +17,7 @@ func aggregateByAccount(transactions []*data.Transaction, aggLevel date.Incremen
 		transactions,
 		aggLevel,
 		func(t *data.Transaction) bool {
-			return accountName == "Total" || t.Account == accountName
+			return accountName == ui.AccountNameTotal || t.Account == accountName
 		})
 }
 

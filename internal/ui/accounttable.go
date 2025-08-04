@@ -57,6 +57,8 @@ var AccountTableWidth = func() int {
 	return tableWidth
 }()
 
+const AccountNameTotal = "Total Accounts"
+
 type accountInfo struct {
 	accountType data.AccountType
 	symbol      string
@@ -68,6 +70,10 @@ type accountInfo struct {
 type AccountTableModel struct {
 	accounts []*accountInfo
 	table    table.Model
+}
+
+type AccountTableSelectionChangedMsg struct {
+	account string
 }
 
 func NewAccountTableModel() AccountTableModel {
@@ -91,10 +97,30 @@ func NewAccountTableModel() AccountTableModel {
 }
 
 func (m AccountTableModel) Update(msg tea.Msg) (AccountTableModel, tea.Cmd) {
-	// TODO: send msg when selected row changes
+	a := m.SelectedAccount()
 	var cmd tea.Cmd
-	m.table, cmd = m.table.Update(msg)
+	m.table, _ = m.table.Update(msg)
+	if m.SelectedAccount() != a {
+		cmd = m.sendSelectionChangedMsg()
+	}
 	return m, cmd
+}
+
+func (m *AccountTableModel) sendSelectionChangedMsg() tea.Cmd {
+	return func() tea.Msg {
+		return AccountTableSelectionChangedMsg{
+			account: m.SelectedAccount(),
+		}
+	}
+}
+
+func (m *AccountTableModel) SelectedAccount() string {
+	row := m.table.SelectedRow()
+	if row != nil {
+		return m.table.SelectedRow()[acctColName]
+	} else {
+		return ""
+	}
 }
 
 func (m AccountTableModel) View() string {
@@ -152,7 +178,7 @@ func getAccountInfo(transactions []*data.Transaction) []*accountInfo {
 		{
 			symbol:      "",
 			accountType: data.AcctOverall,
-			name:        "Overall",
+			name:        AccountNameTotal,
 			income:      totalIncome,
 			expense:     totalExpense,
 		},

@@ -204,6 +204,7 @@ func (m *DatePickerModel) sendDateRangeChangedMsg() tea.Cmd {
 		}
 	}
 }
+
 func (m *DatePickerModel) sendIncrementChangedMsg() tea.Cmd {
 	return func() tea.Msg {
 		return DateIncrementChangedMsg{

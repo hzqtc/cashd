@@ -70,6 +70,10 @@ type CategoryTableModel struct {
 	table      table.Model
 }
 
+type CategoryTableSelectionChangedMsg struct {
+	category string
+}
+
 func NewCategoryTableModel() CategoryTableModel {
 	columns := []table.Column{}
 	for i := range int(totalNumCatColumns) {
@@ -91,10 +95,30 @@ func NewCategoryTableModel() CategoryTableModel {
 }
 
 func (m CategoryTableModel) Update(msg tea.Msg) (CategoryTableModel, tea.Cmd) {
-	// TODO: send msg when selected row changes
+	c := m.SelectedCategory()
 	var cmd tea.Cmd
-	m.table, cmd = m.table.Update(msg)
+	m.table, _ = m.table.Update(msg)
+	if m.SelectedCategory() != c {
+		cmd = m.sendSelectionChangedMsg()
+	}
 	return m, cmd
+}
+
+func (m *CategoryTableModel) sendSelectionChangedMsg() tea.Cmd {
+	return func() tea.Msg {
+		return CategoryTableSelectionChangedMsg{
+			category: m.SelectedCategory(),
+		}
+	}
+}
+
+func (m *CategoryTableModel) SelectedCategory() string {
+	row := m.table.SelectedRow()
+	if row != nil {
+		return m.table.SelectedRow()[catColName]
+	} else {
+		return ""
+	}
 }
 
 func (m CategoryTableModel) View() string {
