@@ -4,7 +4,6 @@ import (
 	"cashd/internal/data"
 	"cashd/internal/date"
 	"cashd/internal/ui"
-	"fmt"
 	"sort"
 	"time"
 )
@@ -38,8 +37,8 @@ func aggregate(transactions []*data.Transaction, aggLevel date.Increment, matche
 		if !matches(t) {
 			continue
 		}
-		// This is the key: aggregate results by date
-		date := getAggLevelDate(t.Date, aggLevel)
+		// Aggregate results by date increment
+		date := aggLevel.FirstDayInIncrement(t.Date)
 		entry, exist := entryMap[date]
 		if !exist {
 			entry = &ui.TsChartEntry{Date: date}
@@ -61,21 +60,3 @@ func aggregate(transactions []*data.Transaction, aggLevel date.Increment, matche
 	})
 	return entries
 }
-
-// Convert a date to the first date in its aggregate level
-// For example, 2023-04-15 in month aggregation -> 2023-04-01
-func getAggLevelDate(d time.Time, aggLevel date.Increment) time.Time {
-	switch aggLevel {
-	case date.Weekly:
-		return date.FirstDayOfWeek(d)
-	case date.Monthly:
-		return date.FirstDayOfMonth(d)
-	case date.Quarterly:
-		return date.FirstDayOfQuarter(d)
-	case date.Annually:
-		return date.FirstDayOfYear(d)
-	default:
-		panic(fmt.Sprintf("Unexpected date aggregate level: %s", aggLevel))
-	}
-}
-

@@ -1,16 +1,15 @@
 BINARY_NAME = cashd
-SRC = $(wildcard *.go)
 GOBIN = $(HOME)/.local/bin
 TARGET_OS = darwin
 TARGET_ARCH = arm64 amd64
 
 all: build
 
-$(BINARY_NAME): $(SRC)
+$(BINARY_NAME):
+
+build:
 	go mod tidy
 	go build -o $(BINARY_NAME)
-
-build: $(BINARY_NAME)
 
 run: build
 	./$(BINARY_NAME)
@@ -21,12 +20,6 @@ clean:
 
 install: build
 	GOBIN=$(GOBIN) go install
-
-fmt:
-	gofmt -w -s $(SRC)
-
-vet:
-	go vet $(SRC)
 
 test:
 	go test

@@ -14,8 +14,26 @@ const (
 	Annually  Increment = "Yearly"
 )
 
-func FirstDayOfWeek(refDate time.Time) time.Time {
-	year, week := refDate.ISOWeek()
+// Give a date, return the first day of the increment. For example,
+// Monthly.FirstDayInIncrement(2025-04-15) => 2025-04-01
+// Annually.FirstDayInIncrement(2025-04-15) => 2025-01-01
+func (inc Increment) FirstDayInIncrement(date time.Time) time.Time {
+	switch inc {
+	case Weekly:
+		return firstDayOfWeek(date)
+	case Monthly:
+		return firstDayOfMonth(date)
+	case Quarterly:
+		return firstDayOfQuarter(date)
+	case Annually:
+		return firstDayOfYear(date)
+	default:
+		panic(fmt.Sprintf("unexpected date increment: %s", inc))
+	}
+}
+
+func firstDayOfWeek(date time.Time) time.Time {
+	year, week := date.ISOWeek()
 
 	// ISO 8601: Week 1 is the week with the first Thursday of the year
 	// Start with Jan 4th (guaranteed to be in week 1)
@@ -34,25 +52,55 @@ func FirstDayOfWeek(refDate time.Time) time.Time {
 	return monday.AddDate(0, 0, (week-1)*7)
 }
 
-func FirstDayOfMonth(refDate time.Time) time.Time {
-	return time.Date(refDate.Year(), refDate.Month(), 1, 0, 0, 0, 0, refDate.Location())
+func firstDayOfMonth(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, date.Location())
 }
 
-func FirstDayOfQuarter(refDate time.Time) time.Time {
-	quarter := QuarterOfYear(refDate)
+func firstDayOfQuarter(date time.Time) time.Time {
+	quarter := quarterOfYear(date)
 	firstMonthOfQuarter := quarter*3 - 2
-	return time.Date(refDate.Year(), time.Month(firstMonthOfQuarter), 1, 0, 0, 0, 0, refDate.Location())
+	return time.Date(date.Year(), time.Month(firstMonthOfQuarter), 1, 0, 0, 0, 0, date.Location())
 }
 
-func QuarterOfYear(date time.Time) int {
+func quarterOfYear(date time.Time) int {
 	return (int(date.Month())-1)/3 + 1
 }
 
-func FirstDayOfYear(refDate time.Time) time.Time {
-	return time.Date(refDate.Year(), 1, 1, 0, 0, 0, 0, refDate.Location())
+func firstDayOfYear(date time.Time) time.Time {
+	return time.Date(date.Year(), 1, 1, 0, 0, 0, 0, date.Location())
 }
 
-func FormatDateToIncrement(date time.Time, inc Increment) string {
+func (inc Increment) AddIncrement(date time.Time) time.Time {
+	switch inc {
+	case Weekly:
+		return date.AddDate(0, 0, 7)
+	case Monthly:
+		return date.AddDate(0, 1, 0)
+	case Quarterly:
+		return date.AddDate(0, 3, 0)
+	case Annually:
+		return date.AddDate(1, 0, 0)
+	default:
+		panic(fmt.Sprintf("unexpected date increment: %s", inc))
+	}
+}
+
+func (inc Increment) SubtractIncrement(date time.Time) time.Time {
+	switch inc {
+	case Weekly:
+		return date.AddDate(0, 0, -7)
+	case Monthly:
+		return date.AddDate(0, -1, 0)
+	case Quarterly:
+		return date.AddDate(0, -3, 0)
+	case Annually:
+		return date.AddDate(-1, 0, 0)
+	default:
+		panic(fmt.Sprintf("unexpected date increment: %s", inc))
+	}
+}
+
+func (inc Increment) FormatDate(date time.Time) string {
 	switch inc {
 	case Weekly:
 		year, week := date.ISOWeek()
@@ -60,7 +108,7 @@ func FormatDateToIncrement(date time.Time, inc Increment) string {
 	case Monthly:
 		return fmt.Sprintf("%s", date.Format("January 2006"))
 	case Quarterly:
-		return fmt.Sprintf("%d Q%d", date.Year(), QuarterOfYear(date))
+		return fmt.Sprintf("%d Q%d", date.Year(), quarterOfYear(date))
 	case Annually:
 		return fmt.Sprintf("%d", date.Year())
 	}

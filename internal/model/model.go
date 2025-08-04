@@ -90,6 +90,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	case dataLoadingSuccessMsg:
 		m.allTransactions = msg.transactions
+		m.updateDatePickerLimits()
 		m.filterTransactions()
 		m.updateAccountTimeSeriesCharts()
 		m.updateCategoryTimeSeriesCharts()
@@ -148,6 +149,19 @@ func (m *Model) processCategoryViewKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmd tea.Cmd
 	m.categoryTable, cmd = m.categoryTable.Update(msg)
 	return cmd
+}
+
+func (m *Model) updateDatePickerLimits() {
+	if txnCount := len(m.allTransactions); txnCount == 0 {
+		return
+	} else {
+		// m.allTransactions are sorted by date in asending order
+		// So simply use the first transaction's date as the min and the last transaction's date as the max
+		m.datePicker.SetLimits(
+			m.allTransactions[0].Date,
+			m.allTransactions[txnCount-1].Date,
+		)
+	}
 }
 
 func (m *Model) filterTransactions() {

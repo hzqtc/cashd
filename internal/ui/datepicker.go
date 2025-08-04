@@ -17,6 +17,8 @@ type DatePickerModel struct {
 	startDate time.Time // Inclusive
 	endDate   time.Time // Exclusive
 	inc       date.Increment
+	minDate   time.Time
+	maxDate   time.Time
 
 	next      key.Binding
 	prev      key.Binding
@@ -54,6 +56,20 @@ func NewDatePickerModel() DatePickerModel {
 
 func (m *DatePickerModel) SetWidth(w int) {
 	m.width = w
+}
+
+func (m *DatePickerModel) SetLimits(minDate, maxDate time.Time) {
+	m.minDate = minDate
+	m.maxDate = maxDate
+	m.clampDateRangeToLimits()
+}
+
+func (m *DatePickerModel) minStartDate() time.Time {
+	return m.inc.FirstDayInIncrement(m.minDate)
+}
+
+func (m *DatePickerModel) maxEndDate() time.Time {
+	return m.inc.AddIncrement(m.inc.FirstDayInIncrement(m.maxDate))
 }
 
 func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
@@ -99,48 +115,31 @@ func (m *DatePickerModel) SelectedDateRange() (time.Time, time.Time) {
 }
 
 func (m *DatePickerModel) nextDateRange() tea.Cmd {
-	switch m.inc {
-	case date.Weekly:
-		m.startDate = m.startDate.AddDate(0, 0, 7)
-		m.endDate = m.endDate.AddDate(0, 0, 7)
-	case date.Monthly:
-		m.startDate = m.startDate.AddDate(0, 1, 0)
-		m.endDate = m.endDate.AddDate(0, 1, 0)
-	case date.Quarterly:
-		m.startDate = m.startDate.AddDate(0, 3, 0)
-		m.endDate = m.endDate.AddDate(0, 3, 0)
-	case date.Annually:
-		m.startDate = m.startDate.AddDate(1, 0, 0)
-		m.endDate = m.endDate.AddDate(1, 0, 0)
+	if nextEndDate := m.inc.AddIncrement(m.endDate); !nextEndDate.After(m.maxEndDate()) {
+		m.startDate = m.inc.AddIncrement(m.startDate)
+		m.endDate = nextEndDate
+		return m.sendDateRangeChangedMsg()
+	} else {
+		return nil
 	}
-
-	return m.sendDateRangeChangedMsg()
 }
 
 func (m *DatePickerModel) prevDateRange() tea.Cmd {
-	switch m.inc {
-	case date.Weekly:
-		m.startDate = m.startDate.AddDate(0, 0, -7)
-		m.endDate = m.endDate.AddDate(0, 0, -7)
-	case date.Monthly:
-		m.startDate = m.startDate.AddDate(0, -1, 0)
-		m.endDate = m.endDate.AddDate(0, -1, 0)
-	case date.Quarterly:
-		m.startDate = m.startDate.AddDate(0, -3, 0)
-		m.endDate = m.endDate.AddDate(0, -3, 0)
-	case date.Annually:
-		m.startDate = m.startDate.AddDate(-1, 0, 0)
-		m.endDate = m.endDate.AddDate(-1, 0, 0)
+	if prevStartDate := m.inc.SubtractIncrement(m.startDate); !prevStartDate.Before(m.minStartDate()) {
+		m.startDate = prevStartDate
+		m.endDate = m.inc.SubtractIncrement(m.endDate)
+		return m.sendDateRangeChangedMsg()
+	} else {
+		return nil
 	}
-
-	return m.sendDateRangeChangedMsg()
 }
 
 func (m DatePickerModel) View() string {
 	var leftStr strings.Builder
 	var rightStr strings.Builder
 
-	leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, date.FormatDateToIncrement(m.startDate, m.inc)))
+	// Current date increment and current date range selection
+	leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, m.inc.FormatDate(m.startDate)))
 
 	// Key bindings
 	rightStr.WriteString("Navigate: ")
@@ -166,8 +165,9 @@ func (m DatePickerModel) View() string {
 		Padding(0, 1).
 		Margin(1, 0, 0).
 		Width(m.width)
-	spaces := m.width - hPadding*2 - lipgloss.Width(leftStr.String()) - lipgloss.Width(rightStr.String())
 
+	// Add spces to align rightStr to right side
+	spaces := m.width - hPadding*2 - lipgloss.Width(leftStr.String()) - lipgloss.Width(rightStr.String())
 	return style.
 		Render(leftStr.String() + strings.Repeat(" ", max(0, spaces)) + rightStr.String())
 }
@@ -178,22 +178,20 @@ func (m *DatePickerModel) Inc() date.Increment {
 
 func (m *DatePickerModel) updateIncrement() tea.Cmd {
 	// Snap start and end dates to increment
-	switch m.inc {
-	case date.Weekly:
-		m.startDate = date.FirstDayOfWeek(m.startDate)
-		m.endDate = m.startDate.AddDate(0, 0, 7)
-	case date.Monthly:
-		m.startDate = date.FirstDayOfMonth(m.startDate)
-		m.endDate = m.startDate.AddDate(0, 1, 0)
-	case date.Quarterly:
-		m.startDate = date.FirstDayOfQuarter(m.startDate)
-		m.endDate = m.startDate.AddDate(0, 3, 0)
-	case date.Annually:
-		m.startDate = date.FirstDayOfYear(m.startDate)
-		m.endDate = m.startDate.AddDate(1, 0, 0)
-	}
-
+	m.startDate = m.inc.FirstDayInIncrement(m.startDate)
+	m.endDate = m.inc.AddIncrement(m.startDate)
+	m.clampDateRangeToLimits()
 	return tea.Batch(m.sendIncrementChangedMsg(), m.sendDateRangeChangedMsg())
+}
+
+func (m *DatePickerModel) clampDateRangeToLimits() {
+	if m.startDate.Before(m.minStartDate()) {
+		m.startDate = m.minStartDate()
+		m.endDate = m.inc.AddIncrement(m.startDate)
+	} else if m.endDate.After(m.maxEndDate()) {
+		m.endDate = m.maxEndDate()
+		m.startDate = m.inc.SubtractIncrement(m.endDate)
+	}
 }
 
 func (m *DatePickerModel) sendDateRangeChangedMsg() tea.Cmd {
