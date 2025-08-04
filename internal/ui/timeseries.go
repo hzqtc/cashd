@@ -4,7 +4,6 @@ import (
 	"cashd/internal/data"
 	"cashd/internal/date"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/NimbleMarkets/ntcharts/canvas/runes"
@@ -60,7 +59,6 @@ func (m *TimeSeriesChartModel) redraw() {
 		maxValue = max(maxValue, entry.Income)
 		maxValue = max(maxValue, entry.Expense)
 	}
-	log.Printf("time series chart [%s] max: %.2f", m.name, maxValue)
 
 	// Create a new chart on data set change, not worth reusing the model
 	m.chart = tschart.New(

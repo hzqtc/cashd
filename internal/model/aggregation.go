@@ -5,7 +5,6 @@ import (
 	"cashd/internal/date"
 	"cashd/internal/ui"
 	"fmt"
-	"log"
 	"sort"
 	"time"
 )
@@ -43,7 +42,6 @@ func aggregate(transactions []*data.Transaction, aggLevel date.Increment, matche
 		date := getAggLevelDate(t.Date, aggLevel)
 		entry, exist := entryMap[date]
 		if !exist {
-			log.Printf("new key %s in aggregated entries", date.Format("2006-01-02"))
 			entry = &ui.TsChartEntry{Date: date}
 			entryMap[date] = entry
 		}
@@ -53,11 +51,9 @@ func aggregate(transactions []*data.Transaction, aggLevel date.Increment, matche
 			entry.Expense += t.Amount
 		}
 	}
-	log.Printf("aggregated entries: %d", len(entryMap))
 	// Convert aggregated results to an array and sort by date
 	entries := []*ui.TsChartEntry{}
 	for _, entry := range entryMap {
-		log.Printf("entry: %v", entry)
 		entries = append(entries, entry)
 	}
 	sort.Slice(entries, func(i, j int) bool {
