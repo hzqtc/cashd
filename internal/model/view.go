@@ -54,22 +54,14 @@ func (m Model) View() string {
 }
 
 func (m *Model) updateLayout() {
-	summaryPanelWidth := max(30, m.width-ui.TxnTableWidth-4)
-	if summaryPanelWidth >= ui.NavBarWidth {
-		// Try to align top components to transaction view components since that's the default view
-		m.datePicker.SetWidth(ui.TxnTableWidth)
-		m.navBar.SetWidth(summaryPanelWidth)
-	} else {
-		// However, prefer to keep navbar a singleline
-		m.navBar.SetWidth(ui.NavBarWidth)
-		m.datePicker.SetWidth(m.width - ui.NavBarWidth - 4)
-	}
+	m.navBar.SetWidth(ui.NavBarWidth)
+	m.datePicker.SetWidth(m.width - ui.NavBarWidth - 4)
 
 	bodyHeight := m.height - datePickerHeight - vSpacing
 	// Transaction view components
 	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
 	m.transactionTable.SetDimensions(ui.TxnTableWidth, bodyHeight-searchInputHeight)
-	m.summary.SetDimensions(summaryPanelWidth, bodyHeight)
+	m.summary.SetDimensions(max(30, m.width-ui.TxnTableWidth-4), bodyHeight)
 	// Account view components
 	m.accountTable.SetDimensions(ui.AccountTableWidth, bodyHeight)
 	m.accountChart.SetDimension(max(50, m.width-ui.AccountTableWidth-6), bodyHeight)
