@@ -4,6 +4,7 @@ import (
 	"cashd/internal/data"
 	"cashd/internal/date"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/NimbleMarkets/ntcharts/canvas/runes"
@@ -28,6 +29,8 @@ type TimeSeriesChartModel struct {
 	entries []*TsChartEntry
 
 	chart tschart.Model
+
+	// TODO: support key bindings for horizontal scrolling
 }
 
 func NewTimeSeriesChartModel() TimeSeriesChartModel {
@@ -70,8 +73,7 @@ func (m *TimeSeriesChartModel) redraw() {
 		tschart.WithDataSetLineStyle(string(data.Income), runes.ThinLineStyle),  // Income line style
 		tschart.WithDataSetStyle(string(data.Expense), tsChartExpenseLineStyle), // Expense style
 		tschart.WithDataSetLineStyle(string(data.Expense), runes.ArcLineStyle),  // Expense line style
-		// TODO: use a custom label formatter that adapts to m.inc
-		tschart.WithXLabelFormatter(tschart.DateTimeLabelFormatter()),
+		tschart.WithXLabelFormatter(dateLabelFormatter(m.inc)),
 		tschart.WithYLabelFormatter(moneyAmountFormatter()),
 	)
 
@@ -97,6 +99,13 @@ func (m TimeSeriesChartModel) View() string {
 
 func moneyAmountFormatter() linechart.LabelFormatter {
 	return func(i int, v float64) string {
-		return fmt.Sprintf("$%.0f", v)
+		return fmt.Sprintf("$%.0f", math.Round(v/10)*10)
+	}
+}
+
+func dateLabelFormatter(inc date.Increment) linechart.LabelFormatter {
+	return func(i int, v float64) string {
+		date := time.Unix(int64(v), 0).Local()
+		return inc.FormatDateShorter(date)
 	}
 }

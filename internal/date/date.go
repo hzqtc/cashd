@@ -106,9 +106,26 @@ func (inc Increment) FormatDate(date time.Time) string {
 		year, week := date.ISOWeek()
 		return fmt.Sprintf("%d week %02d", year, week)
 	case Monthly:
-		return fmt.Sprintf("%s", date.Format("January 2006"))
+		return fmt.Sprintf("%s", date.Format("2006 January"))
 	case Quarterly:
 		return fmt.Sprintf("%d Q%d", date.Year(), quarterOfYear(date))
+	case Annually:
+		return fmt.Sprintf("%d", date.Year())
+	}
+	panic(fmt.Sprintf("Unexpected date increment: %s", inc))
+}
+
+// Shorter format with less space and 2 digits year number
+func (inc Increment) FormatDateShorter(date time.Time) string {
+	year := date.Format("06")
+	switch inc {
+	case Weekly:
+		_, week := date.ISOWeek()
+		return fmt.Sprintf("%s'W%02d", year, week)
+	case Monthly:
+		return fmt.Sprintf("%s'%s", year, date.Format("Jan"))
+	case Quarterly:
+		return fmt.Sprintf("%s'Q%d", year, quarterOfYear(date))
 	case Annually:
 		return fmt.Sprintf("%d", date.Year())
 	}
