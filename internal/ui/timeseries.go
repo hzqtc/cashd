@@ -81,6 +81,8 @@ func (m *TimeSeriesChartModel) redraw() {
 		m.chart.PushDataSet(string(data.Income), tschart.TimePoint{Time: entry.Date, Value: entry.Income})
 		m.chart.PushDataSet(string(data.Expense), tschart.TimePoint{Time: entry.Date, Value: entry.Expense})
 	}
+	// Limit the X range
+	m.chart.SetViewTimeRange(m.entries[0].Date, m.entries[len(m.entries)-1].Date)
 
 	m.chart.DrawAll()
 }
