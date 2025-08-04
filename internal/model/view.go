@@ -18,30 +18,32 @@ func (m Model) View() string {
 		return fmt.Sprintf("An error occurred: %s\nPress 'q' to quit.", m.errMsg)
 	}
 
-	// Top components are fixed
-	top := lipgloss.JoinHorizontal(lipgloss.Top,
+	var top, body string
+	top = lipgloss.JoinHorizontal(lipgloss.Top,
 		m.datePicker.View(),
 		m.navBar.View(),
 	)
-
-	var body string
+	// TODO: add a help panel at the bottom
 	switch m.navBar.ViewMode() {
 	case ui.TransactionView:
-		table := lipgloss.JoinVertical(lipgloss.Left,
-			m.searchInput.View(),
-			m.transactionTable.View(),
-		)
 		body = lipgloss.JoinHorizontal(lipgloss.Top,
-			table,
+			lipgloss.JoinVertical(lipgloss.Left,
+				m.searchInput.View(),
+				m.transactionTable.View(),
+			),
 			m.summary.View(),
 		)
 	case ui.AccountView:
 		body = lipgloss.JoinHorizontal(lipgloss.Top,
 			m.accountTable.View(),
+			// TODO: add an account highlight view panel
+			m.accountChart.View(),
 		)
 	case ui.CategoryView:
 		body = lipgloss.JoinHorizontal(lipgloss.Top,
 			m.categoryTable.View(),
+			// TODO: add a category highlight view panel
+			m.categoryChart.View(),
 		)
 	}
 
@@ -62,12 +64,16 @@ func (m *Model) updateLayout() {
 		m.navBar.SetWidth(ui.NavBarWidth)
 		m.datePicker.SetWidth(m.width - ui.NavBarWidth - 4)
 	}
+
+	bodyHeight := m.height - datePickerHeight - vSpacing
 	// Transaction view components
 	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
-	m.transactionTable.SetDimensions(ui.TxnTableWidth, m.height-datePickerHeight-searchInputHeight-vSpacing)
-	m.summary.SetDimensions(summaryPanelWidth, m.height-datePickerHeight-vSpacing)
+	m.transactionTable.SetDimensions(ui.TxnTableWidth, bodyHeight-searchInputHeight)
+	m.summary.SetDimensions(summaryPanelWidth, bodyHeight)
 	// Account view components
-	m.accountTable.SetDimensions(ui.AccountTableWidth, m.height-datePickerHeight-vSpacing)
+	m.accountTable.SetDimensions(ui.AccountTableWidth, bodyHeight)
+	m.accountChart.SetDimension(m.width-ui.AccountTableWidth-4, bodyHeight)
 	// Category view components
-	m.categoryTable.SetDimensions(ui.CategoryTableWidth, m.height-datePickerHeight-vSpacing)
+	m.categoryTable.SetDimensions(ui.CategoryTableWidth, bodyHeight)
+	m.categoryChart.SetDimension(m.width-ui.CategoryTableWidth-4, bodyHeight)
 }

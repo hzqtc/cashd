@@ -168,7 +168,7 @@ func sortAndTruncate(input map[string]float64) []summaryEntry {
 func getBarChartModel(width int, data []summaryEntry) barchart.Model {
 	barValues := []barchart.BarValue{}
 	for i, item := range data {
-		barValues = append(barValues, barchart.BarValue{Name: item.key, Value: item.value, Style: chartStyles[i]})
+		barValues = append(barValues, barchart.BarValue{Name: item.key, Value: item.value, Style: barChartStyles[i]})
 	}
 	return barchart.New(
 		width,
@@ -184,7 +184,7 @@ func (m SummaryModel) renderSummarySection(data []summaryEntry, chart barchart.M
 	for i, item := range data {
 		s.WriteString(fmt.Sprintf(
 			"%s %s: $%.2f\n",
-			chartStyles[i].Render(string(runes.FullBlock)), // Bar legend
+			barChartStyles[i].Render(string(runes.FullBlock)), // Bar legend
 			item.key,
 			item.value,
 		))

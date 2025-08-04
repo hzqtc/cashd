@@ -14,6 +14,20 @@ const (
 	Annually  Increment = "Yearly"
 )
 
+func (inc Increment) Days() int {
+	switch inc {
+	case Weekly:
+		return 7
+	case Monthly:
+		return 30
+	case Quarterly:
+		return 91
+	case Annually:
+		return 365
+	}
+	panic(fmt.Sprintf("Unexpected date increment: %s", inc))
+}
+
 func FirstDayOfWeek(refDate time.Time) time.Time {
 	year, week := refDate.ISOWeek()
 

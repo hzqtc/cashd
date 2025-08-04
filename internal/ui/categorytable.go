@@ -91,6 +91,7 @@ func NewCategoryTableModel() CategoryTableModel {
 }
 
 func (m CategoryTableModel) Update(msg tea.Msg) (CategoryTableModel, tea.Cmd) {
+	// TODO: send msg when selected row changes
 	var cmd tea.Cmd
 	m.table, cmd = m.table.Update(msg)
 	return m, cmd

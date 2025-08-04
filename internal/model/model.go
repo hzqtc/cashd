@@ -31,7 +31,9 @@ type Model struct {
 	summary          ui.SummaryModel
 	searchInput      ui.SearchInputModel
 	accountTable     ui.AccountTableModel
+	accountChart     ui.TimeSeriesChartModel
 	categoryTable    ui.CategoryTableModel
+	categoryChart    ui.TimeSeriesChartModel
 
 	globalQuit     key.Binding
 	quit           key.Binding
@@ -50,7 +52,9 @@ func NewModel() Model {
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
 		accountTable:     ui.NewAccountTableModel(),
+		accountChart:     ui.NewTimeSeriesChartModel(),
 		categoryTable:    ui.NewCategoryTableModel(),
+		categoryChart:    ui.NewTimeSeriesChartModel(),
 
 		globalQuit:     key.NewBinding(key.WithKeys("ctrl+c")),
 		activateSearch: key.NewBinding(key.WithKeys("/")),
@@ -87,12 +91,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case dataLoadingSuccessMsg:
 		m.allTransactions = msg.transactions
 		m.filterTransactions()
+		m.updateTimeSeriesCharts()
 	case dataLoadingErrorMsg:
 		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
 		m.filterTransactions()
 	case ui.DateIncrementChangedMsg:
-		// TODO: Update time series charts
+		m.updateTimeSeriesCharts()
 	case ui.SearchMsg:
 		m.filterTransactions()
 	case ui.NavigationMsg:
@@ -176,6 +181,16 @@ func (m *Model) filterTransactions() {
 	// Other tables and views are not affected by search query
 	m.accountTable.SetTransactions(viewTransactions)
 	m.categoryTable.SetTransactions(viewTransactions)
+}
+
+func (m *Model) updateTimeSeriesCharts() {
+	// TODO: Update chart based on selection in accountTable and categoryTable
+	m.accountChart.SetEntries(
+		"All accounts income and expenses",
+		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), "Total"),
+		m.datePicker.Inc(),
+	)
+	// TODO: add category time series chart
 }
 
 func loadTransactionsCmd() tea.Cmd {

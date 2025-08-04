@@ -46,13 +46,20 @@ var (
 )
 
 var (
-	chartStyles = [5]lipgloss.Style{
+	barChartStyles = [5]lipgloss.Style{
 		lipgloss.NewStyle().Foreground(chartColor1).Background(chartColor1),
 		lipgloss.NewStyle().Foreground(chartColor2).Background(chartColor2),
 		lipgloss.NewStyle().Foreground(chartColor3).Background(chartColor3),
 		lipgloss.NewStyle().Foreground(chartColor4).Background(chartColor4),
 		lipgloss.NewStyle().Foreground(chartColor5).Background(chartColor5),
 	}
+)
+
+var (
+	tsChartIncomeLineStyle  = lipgloss.NewStyle().Foreground(chartColor3)
+	tsChartExpenseLineStyle = lipgloss.NewStyle().Foreground(chartColor1)
+	tsChartAxisStyle        = lipgloss.NewStyle().Foreground(highlightColor)
+	tsChartLabelStyle       = lipgloss.NewStyle().Foreground(borderColor)
 )
 
 func getTableStyle() table.Styles {

@@ -91,6 +91,7 @@ func NewAccountTableModel() AccountTableModel {
 }
 
 func (m AccountTableModel) Update(msg tea.Msg) (AccountTableModel, tea.Cmd) {
+	// TODO: send msg when selected row changes
 	var cmd tea.Cmd
 	m.table, cmd = m.table.Update(msg)
 	return m, cmd

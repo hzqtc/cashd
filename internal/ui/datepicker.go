@@ -172,6 +172,10 @@ func (m DatePickerModel) View() string {
 		Render(leftStr.String() + strings.Repeat(" ", max(0, spaces)) + rightStr.String())
 }
 
+func (m *DatePickerModel) Inc() date.Increment {
+	return m.inc
+}
+
 func (m *DatePickerModel) updateIncrement() tea.Cmd {
 	// Snap start and end dates to increment
 	switch m.inc {
