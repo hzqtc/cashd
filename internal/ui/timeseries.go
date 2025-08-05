@@ -78,7 +78,6 @@ func (m *TimeSeriesChartModel) redraw() {
 	)
 
 	// Push data to the respective datasets
-	// TODO: add line legend
 	for _, entry := range m.entries {
 		m.chart.PushDataSet(string(data.Income), tschart.TimePoint{Time: entry.Date, Value: entry.Income})
 		m.chart.PushDataSet(string(data.Expense), tschart.TimePoint{Time: entry.Date, Value: entry.Expense})
@@ -94,7 +93,17 @@ func (m TimeSeriesChartModel) View() string {
 		Border(getRoundedBorderWithTitle(m.name, m.width+hPadding*2)).
 		BorderForeground(borderColor).
 		Padding(vPadding, hPadding).
-		Render(m.chart.View())
+		Render(m.renderLegend() + m.chart.View())
+}
+
+func (m TimeSeriesChartModel) renderLegend() string {
+	return fmt.Sprintf(
+		"%s %s    %s %s\n\n",
+		tsChartIncomeLineStyle.Render(string(runes.FullBlock)),
+		data.Income,
+		tsChartExpenseLineStyle.Render(string(runes.FullBlock)),
+		data.Expense,
+	)
 }
 
 func moneyAmountFormatter() linechart.LabelFormatter {
