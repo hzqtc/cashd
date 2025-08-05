@@ -107,7 +107,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case dataLoadingErrorMsg:
 		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
-		m.filterTransactions()
+		cmds = append(cmds, m.filterTransactions())
 	case ui.DateIncrementChangedMsg:
 		m.updateAccountTimeSeriesCharts()
 		m.updateCategoryTimeSeriesCharts()
@@ -177,7 +177,7 @@ func (m *Model) updateDatePickerLimits() {
 	}
 }
 
-func (m *Model) filterTransactions() {
+func (m *Model) filterTransactions() tea.Cmd {
 	startDate, endDate := m.datePicker.SelectedDateRange()
 	// m.allTransactions are ordered by date, use binary search to find start, end index
 	startIndex := sort.Search(len(m.allTransactions), func(i int) bool {
@@ -213,17 +213,10 @@ func (m *Model) filterTransactions() {
 	m.transactionTable.SetTransactions(matchingTransactions)
 	m.summary.SetTransactions(matchingTransactions)
 	// Other tables and views are not affected by search query
-	prevAccount := m.accountTable.Selected()
-	prevCategory := m.categoryTable.Selected()
-	m.accountTable.SetTransactions(viewTransactions)
-	m.categoryTable.SetTransactions(viewTransactions)
-	// TODO: Make (account|category) table.SetTransactions trigger selection changed msg
-	if m.accountTable.Selected() != prevAccount {
-		m.updateAccountTimeSeriesCharts()
-	}
-	if m.categoryTable.Selected() != prevCategory {
-		m.updateCategoryTimeSeriesCharts()
-	}
+	var cmds []tea.Cmd
+	cmds = append(cmds, m.accountTable.SetTransactions(viewTransactions))
+	cmds = append(cmds, m.categoryTable.SetTransactions(viewTransactions))
+	return tea.Batch(cmds...)
 }
 
 func (m *Model) updateAccountTimeSeriesCharts() {
