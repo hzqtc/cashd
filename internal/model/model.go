@@ -20,6 +20,10 @@ type dataLoadingErrorMsg struct {
 	err error
 }
 
+const (
+	tableAccount = "Account"
+)
+
 type Model struct {
 	allTransactions []*data.Transaction
 
@@ -30,7 +34,7 @@ type Model struct {
 	navBar           ui.NavBarModel
 	summary          ui.SummaryModel
 	searchInput      ui.SearchInputModel
-	accountTable     ui.AccountTableModel
+	accountTable     ui.SortableTableModel
 	accountChart     ui.TimeSeriesChartModel
 	categoryTable    ui.CategoryTableModel
 	categoryChart    ui.TimeSeriesChartModel
@@ -51,7 +55,7 @@ func NewModel() Model {
 		navBar:           ui.NewNavBarModel(),
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
-		accountTable:     ui.NewAccountTableModel(),
+		accountTable:     ui.NewSortableTableModel(tableAccount, ui.AccountTableConfig),
 		accountChart:     ui.NewTimeSeriesChartModel(),
 		categoryTable:    ui.NewCategoryTableModel(),
 		categoryChart:    ui.NewTimeSeriesChartModel(),
@@ -101,8 +105,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ui.DateIncrementChangedMsg:
 		m.updateAccountTimeSeriesCharts()
 		m.updateCategoryTimeSeriesCharts()
-	case ui.AccountTableSelectionChangedMsg:
-		m.updateAccountTimeSeriesCharts()
+	case ui.TableSelectionChangedMsg:
+		// TODO: Rewrite other tables with SortableTableModel
+		if msg.TableName == tableAccount {
+			m.updateAccountTimeSeriesCharts()
+		}
 	case ui.CategoryTableSelectionChangedMsg:
 		m.updateCategoryTimeSeriesCharts()
 	case ui.SearchMsg:
@@ -200,12 +207,12 @@ func (m *Model) filterTransactions() {
 	m.transactionTable.SetTransactions(matchingTransactions)
 	m.summary.SetTransactions(matchingTransactions)
 	// Other tables and views are not affected by search query
-	prevAccount := m.accountTable.SelectedAccount()
+	prevAccount := m.accountTable.Selected()
 	prevCategory := m.categoryTable.SelectedCategory()
 	m.accountTable.SetTransactions(viewTransactions)
 	m.categoryTable.SetTransactions(viewTransactions)
 	// TODO: Make (account|category) table.SetTransactions trigger selection changed msg
-	if m.accountTable.SelectedAccount() != prevAccount {
+	if m.accountTable.Selected() != prevAccount {
 		m.updateAccountTimeSeriesCharts()
 	}
 	if m.categoryTable.SelectedCategory() != prevCategory {
@@ -214,12 +221,12 @@ func (m *Model) filterTransactions() {
 }
 
 func (m *Model) updateAccountTimeSeriesCharts() {
-	if m.accountTable.SelectedAccount() == "" {
+	if m.accountTable.Selected() == "" {
 		return
 	}
 	m.accountChart.SetEntries(
-		fmt.Sprintf("%s: %s", m.accountTable.SelectedAccount(), m.datePicker.Inc()),
-		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.SelectedAccount()),
+		fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.datePicker.Inc()),
+		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected()),
 		m.datePicker.Inc(),
 	)
 	// TODO: scroll chart to the selected date in datepicker

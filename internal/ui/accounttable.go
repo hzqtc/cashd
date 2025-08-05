@@ -3,9 +3,9 @@ package ui
 import (
 	"cashd/internal/data"
 	"fmt"
+	"sort"
 
 	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 type accountColumn int
@@ -20,8 +20,49 @@ const (
 	totalNumAcctColumns
 )
 
+func (c accountColumn) index() int {
+	return int(c)
+}
+
 func (c accountColumn) rightAligned() bool {
 	return c == acctColIncome || c == acctColExpense
+}
+
+func (c accountColumn) isSortable() bool {
+	return c != acctColSymbol
+}
+
+func (c accountColumn) width() int {
+	return accountColWidthMap[c]
+}
+
+func (c accountColumn) nextColumn() column {
+	return column(accountColumn((int(c) + 1) % int(totalNumAcctColumns)))
+}
+
+func (c accountColumn) prevColumn() column {
+	return column(accountColumn((int(c) - 1 + int(totalNumAcctColumns)) % int(totalNumAcctColumns)))
+}
+
+func (c accountColumn) getColumnData(a any) string {
+	account, ok := a.(*accountInfo)
+	if !ok {
+		panic(fmt.Sprintf("can't convert to accountInfo: %v", a))
+	}
+	switch c {
+	case acctColSymbol:
+		return account.symbol
+	case acctColType:
+		return string(account.accountType)
+	case acctColName:
+		return account.name
+	case acctColIncome:
+		return fmt.Sprintf("%.2f", account.income)
+	case acctColExpense:
+		return fmt.Sprintf("%.2f", account.expense)
+	default:
+		return ""
+	}
 }
 
 func (c accountColumn) String() string {
@@ -49,6 +90,8 @@ var accountColWidthMap = map[accountColumn]int{
 	acctColExpense: amountColWidth,
 }
 
+const AccountNameTotal = "Total Accounts"
+
 var AccountTableWidth = func() int {
 	tableWidth := 0
 	for i := range totalNumAcctColumns {
@@ -57,7 +100,19 @@ var AccountTableWidth = func() int {
 	return tableWidth
 }()
 
-const AccountNameTotal = "Total Accounts"
+var AccountTableConfig = TableConfig{
+	columns: func() []column {
+		cols := []column{}
+		for i := range int(totalNumAcctColumns) {
+			cols = append(cols, column(accountColumn(i)))
+		}
+		return cols
+	}(),
+	dataProvider:      accountTableDataProvider,
+	rowId:             func(row table.Row) string { return row[acctColName] },
+	defaultSortColumn: column(acctColName),
+	defaultSortDir:    sortAsc,
+}
 
 type accountInfo struct {
 	accountType data.AccountType
@@ -67,87 +122,42 @@ type accountInfo struct {
 	expense     float64
 }
 
-type AccountTableModel struct {
-	accounts []*accountInfo
-	table    table.Model
-}
+func accountTableDataProvider(transactions []*data.Transaction) tableDataSorter {
+	accounts := getAccountInfo(transactions)
 
-type AccountTableSelectionChangedMsg struct {
-	account string
-}
-
-func NewAccountTableModel() AccountTableModel {
-	columns := []table.Column{}
-	for i := range int(totalNumAcctColumns) {
-		col := accountColumn(i)
-		title := col.String()
-		width := accountColWidthMap[col]
-		if col.rightAligned() {
-			title = fmt.Sprintf("%*s", width, title)
-		}
-		columns = append(columns, table.Column{Title: title, Width: width})
-	}
-
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithFocused(true),
-		table.WithStyles(getTableStyle()),
-	)
-	return AccountTableModel{table: t}
-}
-
-func (m AccountTableModel) Update(msg tea.Msg) (AccountTableModel, tea.Cmd) {
-	a := m.SelectedAccount()
-	var cmd tea.Cmd
-	m.table, _ = m.table.Update(msg)
-	if m.SelectedAccount() != a {
-		cmd = m.sendSelectionChangedMsg()
-	}
-	return m, cmd
-}
-
-func (m *AccountTableModel) sendSelectionChangedMsg() tea.Cmd {
-	return func() tea.Msg {
-		return AccountTableSelectionChangedMsg{
-			account: m.SelectedAccount(),
-		}
-	}
-}
-
-func (m *AccountTableModel) SelectedAccount() string {
-	row := m.table.SelectedRow()
-	if row != nil {
-		return m.table.SelectedRow()[acctColName]
-	} else {
-		return ""
-	}
-}
-
-func (m AccountTableModel) View() string {
-	return baseStyle.Render(m.table.View())
-}
-
-func (m *AccountTableModel) SetDimensions(width, height int) {
-	m.table.SetWidth(width)
-	m.table.SetHeight(height)
-}
-
-func (m *AccountTableModel) SetTransactions(transactions []*data.Transaction) {
-	m.accounts = getAccountInfo(transactions)
-	rows := make([]table.Row, len(m.accounts))
-	for i, acct := range m.accounts {
-		rowData := []string{}
-		for i := range int(totalNumAcctColumns) {
-			col := accountColumn(i)
-			colData := getAccountColData(acct, col)
-			if col.rightAligned() {
-				colData = fmt.Sprintf("%*s", accountColWidthMap[col], colData)
+	return func(sortCol column, sortDir sortDirection) []table.Row {
+		sort.Slice(accounts, func(i, j int) bool {
+			a, b := accounts[i], accounts[j]
+			// Make sure AccountTotal stay on top of the table
+			if a.name == AccountNameTotal {
+				return true
+			} else if b.name == AccountNameTotal {
+				return false
 			}
-			rowData = append(rowData, colData)
+			// Compare the rest accounts by specified column
+			inOrder := sortCol.getColumnData(a) < sortCol.getColumnData(b)
+			if sortDir == sortDesc {
+				return !inOrder
+			} else {
+				return inOrder
+			}
+		})
+
+		rows := make([]table.Row, len(accounts))
+		for i, acct := range accounts {
+			row := []string{}
+			for i := range int(totalNumAcctColumns) {
+				col := accountColumn(i)
+				colData := col.getColumnData(acct)
+				if col.rightAligned() {
+					colData = fmt.Sprintf("%*s", accountColWidthMap[col], colData)
+				}
+				row = append(row, colData)
+			}
+			rows[i] = table.Row(row)
 		}
-		rows[i] = table.Row(rowData)
+		return rows
 	}
-	m.table.SetRows(rows)
 }
 
 // Get account-level stats by aggregating transactions
@@ -187,21 +197,4 @@ func getAccountInfo(transactions []*data.Transaction) []*accountInfo {
 		accounts = append(accounts, a)
 	}
 	return accounts
-}
-
-func getAccountColData(acct *accountInfo, col accountColumn) string {
-	switch col {
-	case acctColSymbol:
-		return acct.symbol
-	case acctColType:
-		return string(acct.accountType)
-	case acctColName:
-		return acct.name
-	case acctColIncome:
-		return fmt.Sprintf("%.2f", acct.income)
-	case acctColExpense:
-		return fmt.Sprintf("%.2f", acct.expense)
-	default:
-		return ""
-	}
 }
