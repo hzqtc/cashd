@@ -178,13 +178,18 @@ func (m *SortableTableModel) SetDimensions(width, height int) {
 	m.table.SetHeight(height)
 }
 
-func (m *SortableTableModel) SetTransactions(transactions []*data.Transaction) {
+func (m *SortableTableModel) SetTransactions(transactions []*data.Transaction) tea.Cmd {
+	selected := m.Selected()
 	m.dataSorter = m.dataProvider(transactions)
 	m.updateRows()
+	if m.Selected() != selected {
+		return m.sendSelectionChangedMsg()
+	} else {
+		return nil
+	}
 }
 
 func (m *SortableTableModel) updateRows() {
-	// TODO: trigger TableSelectionChangedMsg
 	if m.dataSorter == nil {
 		return
 	}

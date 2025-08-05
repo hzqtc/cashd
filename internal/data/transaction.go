@@ -74,6 +74,7 @@ func (t *Transaction) Matches(kws []string) bool {
 		// Requires the transaction to contain ALL keywords
 		// So we can return false on any unmatched keyword
 		if !strings.Contains(t.Date.Format("2006-01-02"), kw) &&
+			!strings.Contains(strings.ToLower(string(t.Type)), kw) &&
 			!strings.Contains(strings.ToLower(t.Account), kw) &&
 			!strings.Contains(strings.ToLower(t.Category), kw) &&
 			!strings.Contains(fmt.Sprintf("%.2f", t.Amount), kw) &&
