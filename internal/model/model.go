@@ -27,7 +27,8 @@ const (
 )
 
 type Model struct {
-	allTransactions []*data.Transaction
+	allTransactions  []*data.Transaction
+	viewTransactions []*data.Transaction
 
 	errMsg string
 
@@ -101,7 +102,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case dataLoadingSuccessMsg:
 		m.allTransactions = msg.transactions
 		m.updateDatePickerLimits()
-		m.filterTransactions()
+		cmds = append(cmds, m.filterTransactions())
 		m.updateAccountTimeSeriesCharts()
 		m.updateCategoryTimeSeriesCharts()
 	case dataLoadingErrorMsg:
@@ -119,9 +120,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updateCategoryTimeSeriesCharts()
 		}
 	case ui.SearchMsg:
-		m.filterTransactions()
+		m.searchTransactions()
 	case ui.NavigationMsg:
-		// Handled in view.go
+		// No logic change
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -193,30 +194,38 @@ func (m *Model) filterTransactions() tea.Cmd {
 		panic(fmt.Sprintf("Invalid date range: %s - %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
 	}
 
-	// TODO: separate date range change and search change handling
-	// Transactions within date range
-	viewTransactions := []*data.Transaction{}
-	// Transactions matches the search query
-	matchingTransactions := []*data.Transaction{}
-	searchQuery := strings.ToLower(m.searchInput.Value())
-	keywords := strings.Fields(searchQuery)
+	// Get transactions within date range
+	m.viewTransactions = []*data.Transaction{}
 	for i := startIndex; i < endIndex; i++ {
 		t := m.allTransactions[i]
-		viewTransactions = append(viewTransactions, t)
-
-		if t.Matches(keywords) {
-			matchingTransactions = append(matchingTransactions, t)
-		}
+		m.viewTransactions = append(m.viewTransactions, t)
 	}
 
+	var cmds []tea.Cmd
+	cmds = append(cmds, m.accountTable.SetTransactions(m.viewTransactions))
+	cmds = append(cmds, m.categoryTable.SetTransactions(m.viewTransactions))
+	// Trigger a search msg to handle existing search queries
+	cmds = append(cmds, func() tea.Msg { return ui.SearchMsg{} })
+	return tea.Batch(cmds...)
+}
+
+func (m *Model) searchTransactions() {
+	var matchingTransactions []*data.Transaction
+	searchQuery := strings.ToLower(m.searchInput.Value())
+	keywords := strings.Fields(searchQuery)
+	if len(keywords) == 0 {
+		matchingTransactions = m.viewTransactions
+	} else {
+		matchingTransactions = []*data.Transaction{}
+		for _, t := range m.viewTransactions {
+			if t.Matches(keywords) {
+				matchingTransactions = append(matchingTransactions, t)
+			}
+		}
+	}
 	// Search query only applies to transaction view (transaction table & summary)
 	m.transactionTable.SetTransactions(matchingTransactions)
 	m.summary.SetTransactions(matchingTransactions)
-	// Other tables and views are not affected by search query
-	var cmds []tea.Cmd
-	cmds = append(cmds, m.accountTable.SetTransactions(viewTransactions))
-	cmds = append(cmds, m.categoryTable.SetTransactions(viewTransactions))
-	return tea.Batch(cmds...)
 }
 
 func (m *Model) updateAccountTimeSeriesCharts() {
