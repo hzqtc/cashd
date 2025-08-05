@@ -3,6 +3,7 @@ package ui
 import (
 	"cashd/internal/data"
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -120,7 +121,7 @@ func (m SortableTableModel) Update(msg tea.Msg) (SortableTableModel, tea.Cmd) {
 }
 
 func (m *SortableTableModel) Selected() string {
-	if row := m.table.SelectedRow(); row != nil {
+	if row := m.table.SelectedRow(); row != nil && m.rowId != nil {
 		return m.rowId(row)
 	} else {
 		return ""
@@ -202,7 +203,11 @@ func getTableRows(cols []column, data []any) []table.Row {
 			case int:
 				formattedColData = fmt.Sprintf("%d", colData)
 			case float64:
-				formattedColData = fmt.Sprintf("%.2f", colData)
+				formattedColData = fmt.Sprintf("$%.2f", colData)
+			case time.Time:
+				formattedColData = colData.(time.Time).Format("2006-01-02")
+			default:
+				panic(fmt.Sprintf("unexpected table data type: %v", colData))
 			}
 			if col.rightAligned() {
 				formattedColData = fmt.Sprintf("%*s", col.width(), formattedColData)
@@ -223,6 +228,10 @@ func compareAny(a, b any, sortDir sortDirection) bool {
 		inOrder = a.(int) < b.(int)
 	case float64:
 		inOrder = a.(float64) < b.(float64)
+	case time.Time:
+		inOrder = a.(time.Time).Before(b.(time.Time))
+	default:
+		panic(fmt.Sprintf("unexpected table data type: %v", a))
 	}
 
 	if sortDir == sortDesc {

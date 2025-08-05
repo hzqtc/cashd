@@ -21,8 +21,9 @@ type dataLoadingErrorMsg struct {
 }
 
 const (
-	tableAccount  = "Account"
-	tableCategory = "Category"
+	tableTransaction = "Transaction"
+	tableAccount     = "Account"
+	tableCategory    = "Category"
 )
 
 type Model struct {
@@ -30,15 +31,16 @@ type Model struct {
 
 	errMsg string
 
-	transactionTable ui.TransactionTableModel
 	datePicker       ui.DatePickerModel
 	navBar           ui.NavBarModel
-	summary          ui.SummaryModel
 	searchInput      ui.SearchInputModel
+	transactionTable ui.SortableTableModel
+	summary          ui.SummaryModel
 	accountTable     ui.SortableTableModel
 	accountChart     ui.TimeSeriesChartModel
 	categoryTable    ui.SortableTableModel
 	categoryChart    ui.TimeSeriesChartModel
+	// TODO: add account and category bar chart in the table
 
 	globalQuit     key.Binding
 	quit           key.Binding
@@ -51,7 +53,7 @@ type Model struct {
 
 func NewModel() Model {
 	return Model{
-		transactionTable: ui.NewTransactionTableModel(),
+		transactionTable: ui.NewSortableTableModel(tableTransaction, ui.TransactionTableConfig),
 		datePicker:       ui.NewDatePickerModel(),
 		navBar:           ui.NewNavBarModel(),
 		summary:          ui.NewSummaryModel(),
