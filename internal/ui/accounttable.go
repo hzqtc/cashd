@@ -2,7 +2,6 @@ package ui
 
 import (
 	"cashd/internal/data"
-	"fmt"
 	"sort"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -44,12 +43,8 @@ func (c accountColumn) prevColumn() column {
 	return column(accountColumn((int(c) - 1 + int(totalNumAcctColumns)) % int(totalNumAcctColumns)))
 }
 
-func (c accountColumn) getColumnData(a any) string {
-	account, ok := a.(*accountInfo)
-	if !ok {
-		panic(fmt.Sprintf("can't convert to accountInfo: %v", a))
-	}
-	switch c {
+func (c accountColumn) getColumnData(a any) any {
+	switch account := a.(*accountInfo); c {
 	case acctColSymbol:
 		return account.symbol
 	case acctColType:
@@ -57,9 +52,9 @@ func (c accountColumn) getColumnData(a any) string {
 	case acctColName:
 		return account.name
 	case acctColIncome:
-		return fmt.Sprintf("%.2f", account.income)
+		return account.income
 	case acctColExpense:
-		return fmt.Sprintf("%.2f", account.expense)
+		return account.expense
 	default:
 		return ""
 	}
@@ -124,39 +119,24 @@ type accountInfo struct {
 
 func accountTableDataProvider(transactions []*data.Transaction) tableDataSorter {
 	accounts := getAccountInfo(transactions)
+	result := make([]any, len(accounts))
+	for i, acct := range accounts {
+		result[i] = acct
+	}
 
-	return func(sortCol column, sortDir sortDirection) []table.Row {
-		sort.Slice(accounts, func(i, j int) bool {
-			a, b := accounts[i], accounts[j]
+	return func(sortCol column, sortDir sortDirection) []any {
+		sort.Slice(result, func(i, j int) bool {
+			a, b := result[i], result[j]
 			// Make sure AccountTotal stay on top of the table
-			if a.name == AccountNameTotal {
+			if a.(*accountInfo).name == AccountNameTotal {
 				return true
-			} else if b.name == AccountNameTotal {
+			} else if b.(*accountInfo).name == AccountNameTotal {
 				return false
 			}
 			// Compare the rest accounts by specified column
-			inOrder := sortCol.getColumnData(a) < sortCol.getColumnData(b)
-			if sortDir == sortDesc {
-				return !inOrder
-			} else {
-				return inOrder
-			}
+			return compareAny(sortCol.getColumnData(a), sortCol.getColumnData(b), sortDir)
 		})
-
-		rows := make([]table.Row, len(accounts))
-		for i, acct := range accounts {
-			row := []string{}
-			for i := range int(totalNumAcctColumns) {
-				col := accountColumn(i)
-				colData := col.getColumnData(acct)
-				if col.rightAligned() {
-					colData = fmt.Sprintf("%*s", accountColWidthMap[col], colData)
-				}
-				row = append(row, colData)
-			}
-			rows[i] = table.Row(row)
-		}
-		return rows
+		return result
 	}
 }
 

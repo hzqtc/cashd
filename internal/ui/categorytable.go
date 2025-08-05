@@ -2,10 +2,9 @@ package ui
 
 import (
 	"cashd/internal/data"
-	"fmt"
+	"sort"
 
 	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 type categoryColumn int
@@ -20,8 +19,45 @@ const (
 	totalNumCatColumns
 )
 
+func (c categoryColumn) index() int {
+	return int(c)
+}
+
 func (c categoryColumn) rightAligned() bool {
 	return c == catColNumTxns || c == catColAmount
+}
+
+func (c categoryColumn) isSortable() bool {
+	return c != catColSymbol
+}
+
+func (c categoryColumn) width() int {
+	return categoryColWidthMap[c]
+}
+
+func (c categoryColumn) nextColumn() column {
+	return column(categoryColumn((int(c) + 1) % int(totalNumCatColumns)))
+}
+
+func (c categoryColumn) prevColumn() column {
+	return column(categoryColumn((int(c) - 1 + int(totalNumCatColumns)) % int(totalNumCatColumns)))
+}
+
+func (c categoryColumn) getColumnData(a any) any {
+	switch category := a.(*categoryInfo); c {
+	case catColSymbol:
+		return category.symbol
+	case catColType:
+		return string(category.catType)
+	case catColName:
+		return category.name
+	case catColNumTxns:
+		return category.numTxns
+	case catColAmount:
+		return category.amount
+	default:
+		return ""
+	}
 }
 
 func (c categoryColumn) String() string {
@@ -33,7 +69,7 @@ func (c categoryColumn) String() string {
 	case catColName:
 		return "Category"
 	case catColNumTxns:
-		return "Txn Num"
+		return "Txn #"
 	case catColAmount:
 		return "Amount"
 	default:
@@ -57,6 +93,20 @@ var CategoryTableWidth = func() int {
 	return tableWidth
 }()
 
+var CategoryTableConfig = TableConfig{
+	columns: func() []column {
+		cols := []column{}
+		for i := range int(totalNumCatColumns) {
+			cols = append(cols, column(categoryColumn(i)))
+		}
+		return cols
+	}(),
+	dataProvider:      categoryTableDataProvider,
+	rowId:             func(row table.Row) string { return row[catColName] },
+	defaultSortColumn: column(catColName),
+	defaultSortDir:    sortAsc,
+}
+
 type categoryInfo struct {
 	catType data.TransactionType
 	symbol  string
@@ -65,87 +115,19 @@ type categoryInfo struct {
 	amount  float64
 }
 
-type CategoryTableModel struct {
-	categories []*categoryInfo
-	table      table.Model
-}
-
-type CategoryTableSelectionChangedMsg struct {
-	category string
-}
-
-func NewCategoryTableModel() CategoryTableModel {
-	columns := []table.Column{}
-	for i := range int(totalNumCatColumns) {
-		col := categoryColumn(i)
-		title := col.String()
-		width := categoryColWidthMap[col]
-		if col.rightAligned() {
-			title = fmt.Sprintf("%*s", width, title)
-		}
-		columns = append(columns, table.Column{Title: title, Width: width})
+func categoryTableDataProvider(transactions []*data.Transaction) tableDataSorter {
+	categories := getCategoryInfo(transactions)
+	result := make([]any, len(categories))
+	for i, cat := range categories {
+		result[i] = cat
 	}
 
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithFocused(true),
-		table.WithStyles(getTableStyle()),
-	)
-	return CategoryTableModel{table: t}
-}
-
-func (m CategoryTableModel) Update(msg tea.Msg) (CategoryTableModel, tea.Cmd) {
-	c := m.SelectedCategory()
-	var cmd tea.Cmd
-	m.table, _ = m.table.Update(msg)
-	if m.SelectedCategory() != c {
-		cmd = m.sendSelectionChangedMsg()
+	return func(sortCol column, sortDir sortDirection) []any {
+		sort.Slice(result, func(i, j int) bool {
+			return compareAny(sortCol.getColumnData(result[i]), sortCol.getColumnData(result[j]), sortDir)
+		})
+		return result
 	}
-	return m, cmd
-}
-
-func (m *CategoryTableModel) sendSelectionChangedMsg() tea.Cmd {
-	return func() tea.Msg {
-		return CategoryTableSelectionChangedMsg{
-			category: m.SelectedCategory(),
-		}
-	}
-}
-
-func (m *CategoryTableModel) SelectedCategory() string {
-	row := m.table.SelectedRow()
-	if row != nil {
-		return m.table.SelectedRow()[catColName]
-	} else {
-		return ""
-	}
-}
-
-func (m CategoryTableModel) View() string {
-	return baseStyle.Render(m.table.View())
-}
-
-func (m *CategoryTableModel) SetDimensions(width, height int) {
-	m.table.SetWidth(width)
-	m.table.SetHeight(height)
-}
-
-func (m *CategoryTableModel) SetTransactions(transactions []*data.Transaction) {
-	m.categories = getCategoryInfo(transactions)
-	rows := make([]table.Row, len(m.categories))
-	for i, c := range m.categories {
-		rowData := []string{}
-		for i := range int(totalNumCatColumns) {
-			col := categoryColumn(i)
-			colData := getCategoryColData(c, col)
-			if col.rightAligned() {
-				colData = fmt.Sprintf("%*s", categoryColWidthMap[col], colData)
-			}
-			rowData = append(rowData, colData)
-		}
-		rows[i] = table.Row(rowData)
-	}
-	m.table.SetRows(rows)
 }
 
 // Get category-level stats by aggregating transactions
@@ -170,21 +152,4 @@ func getCategoryInfo(transactions []*data.Transaction) []*categoryInfo {
 		categories = append(categories, c)
 	}
 	return categories
-}
-
-func getCategoryColData(c *categoryInfo, col categoryColumn) string {
-	switch col {
-	case catColSymbol:
-		return c.symbol
-	case catColType:
-		return string(c.catType)
-	case catColName:
-		return c.name
-	case catColNumTxns:
-		return fmt.Sprintf("%d", c.numTxns)
-	case catColAmount:
-		return fmt.Sprintf("%.2f", c.amount)
-	default:
-		return ""
-	}
 }

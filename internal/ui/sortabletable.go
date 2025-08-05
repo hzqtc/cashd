@@ -15,7 +15,7 @@ type column interface {
 	width() int
 	nextColumn() column
 	prevColumn() column
-	getColumnData(any) string
+	getColumnData(any) any
 	String() string
 }
 
@@ -27,7 +27,7 @@ const (
 )
 
 // tableDataSorter is a function that returns sorted table data
-type tableDataSorter func(sortCol column, sortDir sortDirection) []table.Row
+type tableDataSorter func(sortCol column, sortDir sortDirection) []any
 
 // tableDataProvider is a function that takes transactions as input, and return a TableDataSorter
 type tableDataProvider func(transactions []*data.Transaction) tableDataSorter
@@ -187,5 +187,47 @@ func (m *SortableTableModel) updateRows() {
 	if m.dataSorter == nil {
 		return
 	}
-	m.table.SetRows(m.dataSorter(m.sortColumn, m.sortDirection))
+	m.table.SetRows(getTableRows(m.columns, m.dataSorter(m.sortColumn, m.sortDirection)))
+}
+
+func getTableRows(cols []column, data []any) []table.Row {
+	rows := make([]table.Row, len(data))
+	for i, cat := range data {
+		rowData := []string{}
+		for _, col := range cols {
+			var formattedColData string
+			switch colData := col.getColumnData(cat); colData.(type) {
+			case string:
+				formattedColData = colData.(string)
+			case int:
+				formattedColData = fmt.Sprintf("%d", colData)
+			case float64:
+				formattedColData = fmt.Sprintf("%.2f", colData)
+			}
+			if col.rightAligned() {
+				formattedColData = fmt.Sprintf("%*s", col.width(), formattedColData)
+			}
+			rowData = append(rowData, formattedColData)
+		}
+		rows[i] = table.Row(rowData)
+	}
+	return rows
+}
+
+func compareAny(a, b any, sortDir sortDirection) bool {
+	var inOrder bool
+	switch a.(type) {
+	case string:
+		inOrder = a.(string) < b.(string)
+	case int:
+		inOrder = a.(int) < b.(int)
+	case float64:
+		inOrder = a.(float64) < b.(float64)
+	}
+
+	if sortDir == sortDesc {
+		return !inOrder
+	} else {
+		return inOrder
+	}
 }

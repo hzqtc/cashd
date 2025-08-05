@@ -21,7 +21,8 @@ type dataLoadingErrorMsg struct {
 }
 
 const (
-	tableAccount = "Account"
+	tableAccount  = "Account"
+	tableCategory = "Category"
 )
 
 type Model struct {
@@ -36,7 +37,7 @@ type Model struct {
 	searchInput      ui.SearchInputModel
 	accountTable     ui.SortableTableModel
 	accountChart     ui.TimeSeriesChartModel
-	categoryTable    ui.CategoryTableModel
+	categoryTable    ui.SortableTableModel
 	categoryChart    ui.TimeSeriesChartModel
 
 	globalQuit     key.Binding
@@ -57,7 +58,7 @@ func NewModel() Model {
 		searchInput:      ui.NewSearchInputModel(),
 		accountTable:     ui.NewSortableTableModel(tableAccount, ui.AccountTableConfig),
 		accountChart:     ui.NewTimeSeriesChartModel(),
-		categoryTable:    ui.NewCategoryTableModel(),
+		categoryTable:    ui.NewSortableTableModel(tableCategory, ui.CategoryTableConfig),
 		categoryChart:    ui.NewTimeSeriesChartModel(),
 
 		globalQuit:     key.NewBinding(key.WithKeys("ctrl+c")),
@@ -80,11 +81,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, m.globalQuit) {
 			return m, tea.Quit
-		} else if m.navBar.ViewMode() == ui.TransactionView {
+		}
+		// Send key to the active view
+		switch m.navBar.ViewMode() {
+		case ui.TransactionView:
 			cmds = append(cmds, m.processTransactionViewKeys(msg))
-		} else if m.navBar.ViewMode() == ui.AccountView {
+		case ui.AccountView:
 			cmds = append(cmds, m.processAccountViewKeys(msg))
-		} else if m.navBar.ViewMode() == ui.CategoryView {
+		case ui.CategoryView:
 			cmds = append(cmds, m.processCategoryViewKeys(msg))
 		}
 		// Global components always process key events
@@ -106,12 +110,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.updateAccountTimeSeriesCharts()
 		m.updateCategoryTimeSeriesCharts()
 	case ui.TableSelectionChangedMsg:
-		// TODO: Rewrite other tables with SortableTableModel
-		if msg.TableName == tableAccount {
+		switch msg.TableName {
+		case tableAccount:
 			m.updateAccountTimeSeriesCharts()
+		case tableCategory:
+			m.updateCategoryTimeSeriesCharts()
 		}
-	case ui.CategoryTableSelectionChangedMsg:
-		m.updateCategoryTimeSeriesCharts()
 	case ui.SearchMsg:
 		m.filterTransactions()
 	case ui.NavigationMsg:
@@ -208,14 +212,14 @@ func (m *Model) filterTransactions() {
 	m.summary.SetTransactions(matchingTransactions)
 	// Other tables and views are not affected by search query
 	prevAccount := m.accountTable.Selected()
-	prevCategory := m.categoryTable.SelectedCategory()
+	prevCategory := m.categoryTable.Selected()
 	m.accountTable.SetTransactions(viewTransactions)
 	m.categoryTable.SetTransactions(viewTransactions)
 	// TODO: Make (account|category) table.SetTransactions trigger selection changed msg
 	if m.accountTable.Selected() != prevAccount {
 		m.updateAccountTimeSeriesCharts()
 	}
-	if m.categoryTable.SelectedCategory() != prevCategory {
+	if m.categoryTable.Selected() != prevCategory {
 		m.updateCategoryTimeSeriesCharts()
 	}
 }
@@ -224,6 +228,7 @@ func (m *Model) updateAccountTimeSeriesCharts() {
 	if m.accountTable.Selected() == "" {
 		return
 	}
+	// TODO: include date range (e.g. 2014-2025) in border title
 	m.accountChart.SetEntries(
 		fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.datePicker.Inc()),
 		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected()),
@@ -233,12 +238,13 @@ func (m *Model) updateAccountTimeSeriesCharts() {
 }
 
 func (m *Model) updateCategoryTimeSeriesCharts() {
-	if m.categoryTable.SelectedCategory() == "" {
+	if m.categoryTable.Selected() == "" {
 		return
 	}
+	// TODO: include date range (e.g. 2014-2025) in border title
 	m.categoryChart.SetEntries(
-		fmt.Sprintf("%s: %s", m.categoryTable.SelectedCategory(), m.datePicker.Inc()),
-		aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.SelectedCategory()),
+		fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.datePicker.Inc()),
+		aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.Selected()),
 		m.datePicker.Inc(),
 	)
 	// TODO: scroll chart to the selected date in datepicker
