@@ -237,7 +237,6 @@ func (m *Model) updateAccountTimeSeriesCharts() {
 		entries,
 		m.datePicker.Inc(),
 	)
-	// TODO: scroll chart to the selected date in datepicker
 }
 
 func (m *Model) updateCategoryTimeSeriesCharts() {
@@ -250,7 +249,6 @@ func (m *Model) updateCategoryTimeSeriesCharts() {
 		entries,
 		m.datePicker.Inc(),
 	)
-	// TODO: scroll chart to the selected date in datepicker
 }
 
 func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {

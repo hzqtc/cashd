@@ -29,8 +29,6 @@ type TimeSeriesChartModel struct {
 	entries []*TsChartEntry
 
 	chart tschart.Model
-
-	// TODO: support key bindings for horizontal scrolling
 }
 
 func NewTimeSeriesChartModel() TimeSeriesChartModel {
@@ -41,7 +39,7 @@ func (m *TimeSeriesChartModel) SetDimension(width, height int) {
 	m.width = width
 	m.height = height
 	m.chart.Resize(width, height)
-	m.chart.DrawAll()
+	m.chart.DrawBrailleAll()
 }
 
 func (m *TimeSeriesChartModel) SetEntries(name string, entries []*TsChartEntry, inc date.Increment) {
@@ -70,9 +68,7 @@ func (m *TimeSeriesChartModel) redraw() {
 		tschart.WithYRange(0, maxValue),
 		tschart.WithAxesStyles(tsChartAxisStyle, tsChartLabelStyle),
 		tschart.WithDataSetStyle(string(data.Income), tsChartIncomeLineStyle),   // Income style
-		tschart.WithDataSetLineStyle(string(data.Income), runes.ThinLineStyle),  // Income line style
 		tschart.WithDataSetStyle(string(data.Expense), tsChartExpenseLineStyle), // Expense style
-		tschart.WithDataSetLineStyle(string(data.Expense), runes.ArcLineStyle),  // Expense line style
 		tschart.WithXLabelFormatter(dateLabelFormatter(m.inc)),
 		tschart.WithYLabelFormatter(moneyAmountFormatter()),
 	)
@@ -85,7 +81,7 @@ func (m *TimeSeriesChartModel) redraw() {
 	// Limit the X range
 	m.chart.SetViewTimeRange(m.entries[0].Date, m.entries[len(m.entries)-1].Date)
 
-	m.chart.DrawAll()
+	m.chart.DrawBrailleAll()
 }
 
 func (m TimeSeriesChartModel) View() string {
