@@ -33,6 +33,11 @@ var (
 	chartColor4 = lipgloss.Color("#FFC4A3") // pink
 	chartColor5 = lipgloss.Color("#E9C7FF") // violet
 
+	incomeColor  = chartColor3
+	expenseColor = chartColor1
+	incomeStyle  = lipgloss.NewStyle().Foreground(incomeColor)
+	expenseStyle = lipgloss.NewStyle().Foreground(expenseColor)
+
 	roundedBorder = lipgloss.RoundedBorder()
 
 	baseStyle = lipgloss.NewStyle().
@@ -56,8 +61,8 @@ var (
 )
 
 var (
-	tsChartIncomeLineStyle  = lipgloss.NewStyle().Foreground(chartColor3)
-	tsChartExpenseLineStyle = lipgloss.NewStyle().Foreground(chartColor1)
+	tsChartIncomeLineStyle  = incomeStyle
+	tsChartExpenseLineStyle = expenseStyle
 	tsChartAxisStyle        = lipgloss.NewStyle().Foreground(highlightColor)
 	tsChartLabelStyle       = lipgloss.NewStyle().Foreground(borderColor)
 )

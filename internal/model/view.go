@@ -10,6 +10,7 @@ import (
 const (
 	datePickerHeight  = 5
 	searchInputHeight = 3
+	insightsHeight    = 14
 	vSpacing          = 2
 )
 
@@ -20,8 +21,8 @@ func (m Model) View() string {
 
 	var top, body string
 	top = lipgloss.JoinHorizontal(lipgloss.Top,
-		m.datePicker.View(),
 		m.navBar.View(),
+		m.datePicker.View(),
 	)
 	// TODO: add a help panel at the bottom
 	switch m.navBar.ViewMode() {
@@ -34,15 +35,19 @@ func (m Model) View() string {
 			m.summary.View(),
 		)
 	case ui.AccountView:
-		body = lipgloss.JoinHorizontal(lipgloss.Top,
-			m.accountTable.View(),
-			// TODO: add an account highlight view panel
+		body = lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.JoinHorizontal(lipgloss.Top,
+				m.accountTable.View(),
+				m.accountInsights.View(),
+			),
 			m.accountChart.View(),
 		)
 	case ui.CategoryView:
-		body = lipgloss.JoinHorizontal(lipgloss.Top,
-			m.categoryTable.View(),
-			// TODO: add a category highlight view panel
+		body = lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.JoinHorizontal(lipgloss.Top,
+				m.categoryTable.View(),
+				m.categoryInsights.View(),
+			),
 			m.categoryChart.View(),
 		)
 	}
@@ -63,9 +68,11 @@ func (m *Model) updateLayout() {
 	m.transactionTable.SetDimensions(ui.TxnTableWidth, bodyHeight-searchInputHeight)
 	m.summary.SetDimensions(max(30, m.width-ui.TxnTableWidth-4), bodyHeight)
 	// Account view components
-	m.accountTable.SetDimensions(ui.AccountTableWidth, bodyHeight)
-	m.accountChart.SetDimension(max(50, m.width-ui.AccountTableWidth-6), bodyHeight-2)
+	m.accountTable.SetDimensions(ui.AccountTableWidth, insightsHeight)
+	m.accountInsights.SetDimension(max(30, m.width-ui.AccountTableWidth-4), insightsHeight)
+	m.accountChart.SetDimension(m.width-4, bodyHeight-m.accountInsights.Height()-2)
 	// Category view components
-	m.categoryTable.SetDimensions(ui.CategoryTableWidth, bodyHeight)
-	m.categoryChart.SetDimension(max(50, m.width-ui.CategoryTableWidth-6), bodyHeight-2)
+	m.categoryTable.SetDimensions(ui.CategoryTableWidth, insightsHeight)
+	m.categoryInsights.SetDimension(max(30, m.width-ui.CategoryTableWidth-4), insightsHeight)
+	m.categoryChart.SetDimension(m.width-4, bodyHeight-m.categoryInsights.Height()-2)
 }

@@ -114,6 +114,10 @@ func (m *DatePickerModel) SelectedDateRange() (time.Time, time.Time) {
 	return m.startDate, m.endDate
 }
 
+func (m *DatePickerModel) ViewDateRange() string {
+	return m.inc.FormatDate(m.startDate)
+}
+
 func (m *DatePickerModel) nextDateRange() tea.Cmd {
 	if nextEndDate := m.inc.AddIncrement(m.endDate); !nextEndDate.After(m.maxEndDate()) {
 		m.startDate = m.inc.AddIncrement(m.startDate)
@@ -139,7 +143,7 @@ func (m DatePickerModel) View() string {
 	var rightStr strings.Builder
 
 	// Current date increment and current date range selection
-	leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, m.inc.FormatDate(m.startDate)))
+	leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, m.ViewDateRange()))
 
 	// Key bindings
 	rightStr.WriteString("Navigate: ")

@@ -38,8 +38,10 @@ type Model struct {
 	transactionTable ui.SortableTableModel
 	summary          ui.SummaryModel
 	accountTable     ui.SortableTableModel
+	accountInsights  ui.InsightsModel
 	accountChart     ui.TimeSeriesChartModel
 	categoryTable    ui.SortableTableModel
+	categoryInsights ui.InsightsModel
 	categoryChart    ui.TimeSeriesChartModel
 
 	globalQuit     key.Binding
@@ -59,8 +61,10 @@ func NewModel() Model {
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
 		accountTable:     ui.NewSortableTableModel(tableAccount, ui.AccountTableConfig),
+		accountInsights:  ui.NewInsightsModel(),
 		accountChart:     ui.NewTimeSeriesChartModel(),
 		categoryTable:    ui.NewSortableTableModel(tableCategory, ui.CategoryTableConfig),
+		categoryInsights: ui.NewInsightsModel(),
 		categoryChart:    ui.NewTimeSeriesChartModel(),
 
 		globalQuit:     key.NewBinding(key.WithKeys("ctrl+c")),
@@ -102,21 +106,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.allTransactions = msg.transactions
 		m.updateDatePickerLimits()
 		cmds = append(cmds, m.filterTransactions())
-		m.updateAccountTimeSeriesCharts()
-		m.updateCategoryTimeSeriesCharts()
+		m.onSelectedAccountChanged()
+		m.onSelectedCategoryChanged()
 	case dataLoadingErrorMsg:
 		m.errMsg = msg.err.Error()
 	case ui.DateRangeChangedMsg:
 		cmds = append(cmds, m.filterTransactions())
+		m.updateAccountInsights()
+		m.updateCategoryInsights()
 	case ui.DateIncrementChangedMsg:
-		m.updateAccountTimeSeriesCharts()
-		m.updateCategoryTimeSeriesCharts()
+		m.onSelectedAccountChanged()
+		m.onSelectedCategoryChanged()
 	case ui.TableSelectionChangedMsg:
 		switch msg.TableName {
 		case tableAccount:
-			m.updateAccountTimeSeriesCharts()
+			m.onSelectedAccountChanged()
 		case tableCategory:
-			m.updateCategoryTimeSeriesCharts()
+			m.onSelectedCategoryChanged()
 		}
 	case ui.SearchMsg:
 		m.searchTransactions()
@@ -227,28 +233,48 @@ func (m *Model) searchTransactions() {
 	m.summary.SetTransactions(matchingTransactions)
 }
 
-func (m *Model) updateAccountTimeSeriesCharts() {
+func (m *Model) onSelectedAccountChanged() {
 	if m.accountTable.Selected() == "" {
 		return
 	}
+
 	entries := aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected())
 	m.accountChart.SetEntries(
 		fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.getTimeSeriesRange(entries)),
 		entries,
 		m.datePicker.Inc(),
 	)
+
+	m.updateAccountInsights()
 }
 
-func (m *Model) updateCategoryTimeSeriesCharts() {
+func (m *Model) onSelectedCategoryChanged() {
 	if m.categoryTable.Selected() == "" {
 		return
 	}
+
 	entries := aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.Selected())
 	m.categoryChart.SetEntries(
 		fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.getTimeSeriesRange(entries)),
 		entries,
 		m.datePicker.Inc(),
 	)
+
+	m.updateCategoryInsights()
+}
+
+func (m *Model) updateAccountInsights() {
+	m.accountInsights.SetTransactionsWithAccount(m.viewTransactions, m.accountTable.Selected())
+	m.accountInsights.SetName(fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.datePicker.ViewDateRange()))
+
+	m.updateLayout()
+}
+
+func (m *Model) updateCategoryInsights() {
+	m.categoryInsights.SetTransactionsWithCategory(m.viewTransactions, m.categoryTable.Selected())
+	m.categoryInsights.SetName(fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.datePicker.ViewDateRange()))
+
+	m.updateLayout()
 }
 
 func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {
@@ -259,8 +285,8 @@ func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {
 	lastDate := entries[len(entries)-1].Date
 	return fmt.Sprintf(
 		"%s - %s",
-		m.datePicker.Inc().FormatDateShorter(firstDate),
-		m.datePicker.Inc().FormatDateShorter(lastDate),
+		m.datePicker.Inc().FormatDate(firstDate),
+		m.datePicker.Inc().FormatDate(lastDate),
 	)
 }
 
