@@ -85,7 +85,7 @@ var accountColWidthMap = map[accountColumn]int{
 	acctColExpense: amountColWidth,
 }
 
-const AccountNameTotal = "Total Accounts"
+const AccountNameTotal = "All Accounts"
 
 var AccountTableWidth = func() int {
 	tableWidth := 0

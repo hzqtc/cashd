@@ -41,7 +41,6 @@ type Model struct {
 	accountChart     ui.TimeSeriesChartModel
 	categoryTable    ui.SortableTableModel
 	categoryChart    ui.TimeSeriesChartModel
-	// TODO: add account and category bar chart in the table
 
 	globalQuit     key.Binding
 	quit           key.Binding
@@ -232,10 +231,10 @@ func (m *Model) updateAccountTimeSeriesCharts() {
 	if m.accountTable.Selected() == "" {
 		return
 	}
-	// TODO: include date range (e.g. 2014-2025) in border title
+	entries := aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected())
 	m.accountChart.SetEntries(
-		fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.datePicker.Inc()),
-		aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected()),
+		fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.getTimeSeriesRange(entries)),
+		entries,
 		m.datePicker.Inc(),
 	)
 	// TODO: scroll chart to the selected date in datepicker
@@ -245,13 +244,26 @@ func (m *Model) updateCategoryTimeSeriesCharts() {
 	if m.categoryTable.Selected() == "" {
 		return
 	}
-	// TODO: include date range (e.g. 2014-2025) in border title
+	entries := aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.Selected())
 	m.categoryChart.SetEntries(
-		fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.datePicker.Inc()),
-		aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.Selected()),
+		fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.getTimeSeriesRange(entries)),
+		entries,
 		m.datePicker.Inc(),
 	)
 	// TODO: scroll chart to the selected date in datepicker
+}
+
+func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {
+	if len(entries) == 0 {
+		return ""
+	}
+	firstDate := entries[0].Date
+	lastDate := entries[len(entries)-1].Date
+	return fmt.Sprintf(
+		"%s - %s",
+		m.datePicker.Inc().FormatDateShorter(firstDate),
+		m.datePicker.Inc().FormatDateShorter(lastDate),
+	)
 }
 
 func loadTransactionsCmd() tea.Cmd {
