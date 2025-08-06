@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -58,6 +59,10 @@ type SortableTableModel struct {
 	sortColumn    column
 	sortDirection sortDirection
 	table         table.Model
+
+	sortNext    key.Binding
+	sortPrev    key.Binding
+	reverseSort key.Binding
 }
 
 func NewSortableTableModel(name string, config TableConfig) SortableTableModel {
@@ -68,6 +73,10 @@ func NewSortableTableModel(name string, config TableConfig) SortableTableModel {
 		rowId:         config.rowId,
 		sortColumn:    config.defaultSortColumn,
 		sortDirection: config.defaultSortDir,
+
+		sortNext:    key.NewBinding(key.WithKeys("s")),
+		sortPrev:    key.NewBinding(key.WithKeys("S")),
+		reverseSort: key.NewBinding(key.WithKeys("r")),
 	}
 	t := table.New(
 		table.WithColumns(m.getTableColumns()),
@@ -78,7 +87,7 @@ func NewSortableTableModel(name string, config TableConfig) SortableTableModel {
 	return m
 }
 
-func (m SortableTableModel) getTableColumns() []table.Column {
+func (m *SortableTableModel) getTableColumns() []table.Column {
 	tableCols := []table.Column{}
 	for _, col := range m.columns {
 		title := col.String()
@@ -101,15 +110,14 @@ func (m SortableTableModel) getTableColumns() []table.Column {
 func (m SortableTableModel) Update(msg tea.Msg) (SortableTableModel, tea.Cmd) {
 	selected := m.Selected()
 	var cmd tea.Cmd
-	// TODO: define key bindings using bubbletea.key
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "s":
+		switch {
+		case key.Matches(msg, m.sortNext):
 			m.sortNextColumn()
-		case "S":
+		case key.Matches(msg, m.sortPrev):
 			m.sortPrevColumn()
-		case "r":
+		case key.Matches(msg, m.reverseSort):
 			m.reverseSortDir()
 		}
 	}
