@@ -20,6 +20,7 @@ type DatePickerModel struct {
 	minDate   time.Time
 	maxDate   time.Time
 
+	reset     key.Binding
 	next      key.Binding
 	prev      key.Binding
 	byWeek    key.Binding
@@ -45,6 +46,7 @@ func NewDatePickerModel() DatePickerModel {
 		startDate: currentMonth,
 		endDate:   currentMonth.AddDate(0, 1, 0),
 		inc:       date.Monthly,
+		reset:     key.NewBinding(key.WithKeys("0")),
 		next:      key.NewBinding(key.WithKeys("l", "right")),
 		prev:      key.NewBinding(key.WithKeys("h", "left")),
 		byWeek:    key.NewBinding(key.WithKeys("w")),
@@ -77,6 +79,8 @@ func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, m.reset):
+			cmd = m.resetDateRange()
 		case key.Matches(msg, m.prev):
 			cmd = m.prevDateRange()
 		case key.Matches(msg, m.next):
@@ -118,6 +122,14 @@ func (m *DatePickerModel) ViewDateRange() string {
 	return m.inc.FormatDate(m.startDate)
 }
 
+func (m *DatePickerModel) resetDateRange() tea.Cmd {
+	// Reset to current date while keeping increment
+	m.startDate = m.inc.FirstDayInIncrement(time.Now())
+	m.endDate = m.inc.AddIncrement(m.startDate)
+	m.clampDateRangeToLimits()
+	return m.sendDateRangeChangedMsg()
+}
+
 func (m *DatePickerModel) nextDateRange() tea.Cmd {
 	if nextEndDate := m.inc.AddIncrement(m.endDate); !nextEndDate.After(m.maxEndDate()) {
 		m.startDate = m.inc.AddIncrement(m.startDate)
@@ -150,6 +162,8 @@ func (m DatePickerModel) View() string {
 	rightStr.WriteString(keyStyle.Render("h/←") + " prev")
 	rightStr.WriteString(" ")
 	rightStr.WriteString(keyStyle.Render("l/→") + " next")
+	rightStr.WriteString(" ")
+	rightStr.WriteString(keyStyle.Render("0") + " reset")
 	rightStr.WriteString(" ")
 	rightStr.WriteString("Switch to: ")
 	rightStr.WriteString(keyStyle.Render(m.byWeek.Keys()[0]) + "eekly")
