@@ -38,8 +38,10 @@ func NewTimeSeriesChartModel() TimeSeriesChartModel {
 func (m *TimeSeriesChartModel) SetDimension(width, height int) {
 	m.width = width
 	m.height = height
-	m.chart.Resize(width, height)
-	m.chart.DrawBrailleAll()
+	if len(m.entries) > 0 {
+		m.chart.Resize(width, height)
+		m.chart.DrawBrailleAll()
+	}
 }
 
 func (m *TimeSeriesChartModel) SetEntries(name string, entries []*TsChartEntry, inc date.Increment) {

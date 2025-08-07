@@ -77,7 +77,7 @@ func NewModel() Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(loadTransactionsCmd())
+	return loadTransactions()
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -310,11 +310,27 @@ func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {
 	)
 }
 
-func loadTransactionsCmd() tea.Cmd {
-	// TODO: switch data source based on command line flags
-	datasource := ledger.LedgerDataSource{}
+func loadTransactions() tea.Cmd {
+	// TODO: add csv as a data source
+	datasources := []data.DataSource{ledger.LedgerDataSource{}}
+	for _, ds := range datasources {
+		if ds.Preferred() {
+			return loadTransactionsFromDataSource(ds)
+		}
+	}
+	for _, ds := range datasources {
+		if ds.Enabled() {
+			return loadTransactionsFromDataSource(ds)
+		}
+	}
 	return func() tea.Msg {
-		transactions, err := datasource.LoadTransactions()
+		return dataLoadingErrorMsg{fmt.Errorf("No available data source")}
+	}
+}
+
+func loadTransactionsFromDataSource(ds data.DataSource) tea.Cmd {
+	return func() tea.Msg {
+		transactions, err := ds.LoadTransactions()
 		if err != nil {
 			return dataLoadingErrorMsg{err}
 		} else {
