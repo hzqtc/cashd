@@ -16,15 +16,15 @@ const (
 
 func (m Model) View() string {
 	if m.errMsg != "" {
-		return fmt.Sprintf("An error occurred: %s\nPress 'q' to quit.", m.errMsg)
+		return fmt.Sprintf("An error occurred: %s\nPress 'ctrl + c' to quit.", m.errMsg)
 	}
 
-	var top, body string
+	var top, body, bottom string
 	top = lipgloss.JoinHorizontal(lipgloss.Top,
 		m.navBar.View(),
 		m.datePicker.View(),
 	)
-	// TODO: add a help panel at the bottom
+
 	switch m.navBar.ViewMode() {
 	case ui.TransactionView:
 		body = lipgloss.JoinHorizontal(lipgloss.Top,
@@ -52,9 +52,12 @@ func (m Model) View() string {
 		)
 	}
 
+	bottom = m.help.View()
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		top,
 		body,
+		bottom,
 	)
 }
 
@@ -62,7 +65,9 @@ func (m *Model) updateLayout() {
 	m.navBar.SetWidth(ui.NavBarWidth)
 	m.datePicker.SetWidth(m.width - ui.NavBarWidth - 4)
 
-	bodyHeight := m.height - datePickerHeight - vSpacing
+	m.help.SetWidth(m.width - 2)
+	bottomHeight := lipgloss.Height(m.help.View())
+	bodyHeight := m.height - datePickerHeight - bottomHeight - vSpacing
 	// Transaction view components
 	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
 	m.transactionTable.SetDimensions(ui.TxnTableWidth, bodyHeight-searchInputHeight)

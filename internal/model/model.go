@@ -43,11 +43,12 @@ type Model struct {
 	categoryTable    ui.SortableTableModel
 	categoryInsights ui.InsightsModel
 	categoryChart    ui.TimeSeriesChartModel
+	help             ui.HelpModel
 
 	globalQuit     key.Binding
-	quit           key.Binding
 	activateSearch key.Binding
 	clearSearch    key.Binding
+	toggleHelp     key.Binding
 
 	width  int
 	height int
@@ -66,10 +67,12 @@ func NewModel() Model {
 		categoryTable:    ui.NewSortableTableModel(tableCategory, ui.CategoryTableConfig),
 		categoryInsights: ui.NewInsightsModel(),
 		categoryChart:    ui.NewTimeSeriesChartModel(),
+		help:             ui.NewHelpModel(),
 
 		globalQuit:     key.NewBinding(key.WithKeys("ctrl+c")),
 		activateSearch: key.NewBinding(key.WithKeys("/")),
 		clearSearch:    key.NewBinding(key.WithKeys("esc")),
+		toggleHelp:     key.NewBinding(key.WithKeys("?")),
 	}
 }
 
@@ -150,6 +153,9 @@ func (m *Model) processTransactionViewKeys(msg tea.KeyMsg) tea.Cmd {
 		switch {
 		case key.Matches(msg, m.activateSearch):
 			m.searchInput.Focus()
+		case key.Matches(msg, m.toggleHelp):
+			m.help.ToggleVisibility()
+			m.updateLayout()
 		default:
 			m.transactionTable, cmd = m.transactionTable.Update(msg)
 			return cmd
@@ -159,15 +165,29 @@ func (m *Model) processTransactionViewKeys(msg tea.KeyMsg) tea.Cmd {
 }
 
 func (m *Model) processAccountViewKeys(msg tea.KeyMsg) tea.Cmd {
-	var cmd tea.Cmd
-	m.accountTable, cmd = m.accountTable.Update(msg)
-	return cmd
+	switch {
+	case key.Matches(msg, m.toggleHelp):
+		m.help.ToggleVisibility()
+		m.updateLayout()
+	default:
+		var cmd tea.Cmd
+		m.accountTable, cmd = m.accountTable.Update(msg)
+		return cmd
+	}
+	return nil
 }
 
 func (m *Model) processCategoryViewKeys(msg tea.KeyMsg) tea.Cmd {
-	var cmd tea.Cmd
-	m.categoryTable, cmd = m.categoryTable.Update(msg)
-	return cmd
+	switch {
+	case key.Matches(msg, m.toggleHelp):
+		m.help.ToggleVisibility()
+		m.updateLayout()
+	default:
+		var cmd tea.Cmd
+		m.categoryTable, cmd = m.categoryTable.Update(msg)
+		return cmd
+	}
+	return nil
 }
 
 func (m *Model) updateDatePickerLimits() {
