@@ -45,10 +45,17 @@ The following limitations are known:
 ### 🛠️ Prerequsites
 
 - A nerd font enabled terminal
+- (Optional) ledger or hledger
 
 ### 📦 Prebuilt binary
 
-Prebuilt binaries can be found in Github release page.
+Prebuilt binaries can be downloaded from the [release page](https://github.com/hzqtc/cashd/releases).
+
+Or using [eget](https://github.com/zyedidia/eget)
+
+```bash
+eget hzqtc/cashd
+```
 
 ### 🏗️ Build from source
 
