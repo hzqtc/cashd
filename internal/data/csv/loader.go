@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/spf13/pflag"
 )
@@ -51,6 +52,11 @@ func (s CsvDataSource) LoadTransactions() ([]*data.Transaction, error) {
 	for i, rec := range records {
 		txns[i] = parseCsvRecord(rec, config)
 	}
+
+	// Sort by date
+	sort.Slice(txns, func(i, j int) bool {
+		return txns[i].Date.Before(txns[j].Date)
+	})
 
 	return txns, nil
 }
