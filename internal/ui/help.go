@@ -3,7 +3,15 @@ package ui
 import (
 	"fmt"
 	"strings"
+
+	"github.com/spf13/pflag"
 )
+
+var helpVisible bool
+
+func init() {
+	pflag.BoolVar(&helpVisible, "help-panel", true, "Show help panel in the TUI")
+}
 
 type HelpModel struct {
 	visible bool
@@ -12,12 +20,16 @@ type HelpModel struct {
 
 func NewHelpModel() HelpModel {
 	return HelpModel{
-		visible: true,
+		visible: helpVisible,
 	}
 }
 
 func (m *HelpModel) ToggleVisibility() {
 	m.visible = !m.visible
+}
+
+func (m *HelpModel) Visible() bool {
+	return m.visible
 }
 
 func (m *HelpModel) SetWidth(width int) {

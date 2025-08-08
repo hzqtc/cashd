@@ -19,7 +19,7 @@ func (m Model) View() string {
 		return fmt.Sprintf("An error occurred: %s\nPress 'ctrl + c' to quit.", m.errMsg)
 	}
 
-	var top, body, bottom string
+	var top, body string
 	top = lipgloss.JoinHorizontal(lipgloss.Top,
 		m.navBar.View(),
 		m.datePicker.View(),
@@ -52,13 +52,12 @@ func (m Model) View() string {
 		)
 	}
 
-	bottom = m.help.View()
+	views := []string{top, body}
+	if m.help.Visible() {
+		views = append(views, m.help.View())
+	}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
-		top,
-		body,
-		bottom,
-	)
+	return lipgloss.JoinVertical(lipgloss.Left, views...)
 }
 
 func (m *Model) updateLayout() {
@@ -66,7 +65,12 @@ func (m *Model) updateLayout() {
 	m.datePicker.SetWidth(m.width - ui.NavBarWidth - 4)
 
 	m.help.SetWidth(m.width - 2)
-	bottomHeight := lipgloss.Height(m.help.View())
+	var bottomHeight int
+	if m.help.Visible() {
+		bottomHeight = lipgloss.Height(m.help.View())
+	} else {
+		bottomHeight = 0
+	}
 	bodyHeight := m.height - datePickerHeight - bottomHeight - vSpacing
 	// Transaction view components
 	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
