@@ -5,8 +5,8 @@ It allows you to effortlessly track, analyze, and gain insights into your financ
 `cashd` currently supports ledger/hledger and CSV as data sources
 
 <p float="left">
-  <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/transaction_view.png" width="500" />
-  <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/account_view.png" width="500" />
+  <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/transaction_view.png" width="400" />
+  <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/account_view.png" width="400" />
 </p>
 
 ## Features
