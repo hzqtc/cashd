@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -20,6 +21,20 @@ const (
 	expensSymbol = ""
 )
 
+func (t *TransactionType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("failed to unmarshal TransactionType: %w", err)
+	}
+
+	if s == string(Income) || s == string(Expense) {
+		*t = TransactionType(s)
+		return nil
+	} else {
+		return fmt.Errorf("invalid TransactionType: %s", s)
+	}
+}
+
 type AccountType string
 
 const (
@@ -36,6 +51,20 @@ const (
 	cardSymbol = "󰆛"
 )
 
+func (a *AccountType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("failed to unmarshal AccountType: %w", err)
+	}
+
+	if s == string(AcctCash) || s == string(AcctBankAccount) || s == string(AcctCreditCard) {
+		*a = AccountType(s)
+		return nil
+	} else {
+		return fmt.Errorf("invalid AccountType: %s", s)
+	}
+}
+
 type Transaction struct {
 	Date        time.Time
 	Type        TransactionType
@@ -46,16 +75,31 @@ type Transaction struct {
 	Description string
 }
 
-type TxnField string
+type TransactionField string
 
-var TransactionFields = func() []TxnField {
-	fields := []TxnField{}
+var AllTransactionFields = func() []TransactionField {
+	fields := []TransactionField{}
 	t := reflect.TypeOf(Transaction{})
 	for i := range t.NumField() {
-		fields = append(fields, TxnField(t.Field(i).Name))
+		fields = append(fields, TransactionField(t.Field(i).Name))
 	}
 	return fields
 }()
+
+func (t *TransactionField) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("failed to unmarshal TransactionField: %w", err)
+	}
+
+	for _, f := range AllTransactionFields {
+		if s == string(f) {
+			*t = TransactionField(s)
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid TransactionField: %s", s)
+}
 
 func (t *Transaction) IsValid() bool {
 	return !t.Date.IsZero() &&

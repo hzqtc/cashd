@@ -39,8 +39,8 @@ func (s CsvDataSource) LoadTransactions() ([]*data.Transaction, error) {
 				config.ColumnIndexes[field] = index
 			}
 		}
-		// Check all fields have index
-		for _, field := range data.TransactionFields {
+		// Check each field has an index except for AccountType which can be inferred from Account
+		for _, field := range data.AllTransactionFields {
 			if _, ok := config.ColumnIndexes[field]; field != "AccountType" && !ok {
 				return []*data.Transaction{}, fmt.Errorf("failed to parse CSV: unable to locate column for transaction field %s", field)
 			}

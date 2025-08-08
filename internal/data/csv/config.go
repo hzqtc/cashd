@@ -1,31 +1,62 @@
 package csv
 
-import "cashd/internal/data"
+import (
+	"cashd/internal/data"
+	"encoding/json"
+	"fmt"
+	"os"
+	"reflect"
+
+	"github.com/spf13/pflag"
+)
+
+var csvConfigFlag string
+
+func init() {
+	pflag.StringVar(&csvConfigFlag, "csv-config", "", "CSV configuration json file path")
+}
 
 type config struct {
-	// Mapping for csv column names to Transaction struct fields
-	Columns map[string]data.TxnField `json:"columns"`
-	// Mapping from csv column index to Transaction struct fields
-	ColumnIndexes map[data.TxnField]int `json:"column_indexes"`
-	// Formating string in standard go date formats for parsing Transaction.Date
-	DateFormats []string `json:"dateFormats"`
-	// Value mapping for Tranaction.Type field from csv data to "Income" or "Expense"
-	TxnTypeMappings map[string]data.TransactionType `json:"transaction_types"`
-	// Value mapping for Tranaction.AccountType field from csv data to "Cash", "Bank Account" or "Credit Card"
-	AccountTypeMappings map[string]data.AccountType `json:"account_types"`
-	// Mapping from Transaction.Account to Transaction.AccountType if the csv does not have a column for account type
-	AccountTypeFromName map[string]data.AccountType `json:"account_type_from_name"`
+	Columns             map[string]data.TransactionField `json:"columns"`
+	ColumnIndexes       map[data.TransactionField]int    `json:"column_indexes"`
+	DateFormats         []string                         `json:"date_formats"`
+	TxnTypeMappings     map[string]data.TransactionType  `json:"transaction_types"`
+	AccountTypeMappings map[string]data.AccountType      `json:"account_types"`
+	AccountTypeFromName map[string]data.AccountType      `json:"account_type_from_name"`
 }
 
 func getConfig() *config {
-	// TODO: load from a config file
-	return defaultConfig()
+	if csvConfigFlag == "" {
+		return defaultConfig
+	}
+
+	fileContent, err := os.ReadFile(csvConfigFlag)
+	if err != nil {
+		panic(fmt.Sprintf("Error reading CSV config file: %v", err))
+	}
+
+	var c config
+	err = json.Unmarshal(fileContent, &c)
+	if err != nil {
+		panic(fmt.Sprintf("Error unmarshaling CSV config: %v", err))
+	}
+
+	cv := reflect.ValueOf(&c).Elem()
+	dv := reflect.ValueOf(defaultConfig).Elem()
+	for i := 0; i < cv.NumField(); i++ {
+		f := cv.Field(i)
+		if f.IsZero() {
+			// Backfill missing config fields using the default
+			f.Set(dv.Field(i))
+		}
+	}
+
+	return &c
 }
 
-func defaultConfig() *config {
+var defaultConfig = func() *config {
 	c := &config{
-		Columns:       map[string]data.TxnField{}, // Would be filled below
-		ColumnIndexes: map[data.TxnField]int{},
+		ColumnIndexes: map[data.TransactionField]int{},
 		DateFormats: []string{
 			"2006-01-02",
 			"2006-01-02 15:04:05",
@@ -44,13 +75,14 @@ func defaultConfig() *config {
 			"^cash$":             data.AcctCash,
 			"checking$":          data.AcctBankAccount,
 			"saving(s)?$":        data.AcctBankAccount,
-			"credit(\\s?card)?$": data.AcctBankAccount,
+			"credit(\\s?card)?$": data.AcctCreditCard,
 		},
 	}
 
-	for _, f := range data.TransactionFields {
+	c.Columns = map[string]data.TransactionField{}
+	for _, f := range data.AllTransactionFields {
 		c.Columns[string(f)] = f
 	}
 
 	return c
-}
+}()

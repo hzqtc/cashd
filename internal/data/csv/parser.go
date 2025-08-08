@@ -16,7 +16,7 @@ func parseCsvRecord(segments []string, config *config) *data.Transaction {
 	// Get reflect.Value of the struct pointer
 	v := reflect.ValueOf(&txn).Elem()
 
-	for _, f := range data.TransactionFields {
+	for _, f := range data.AllTransactionFields {
 		index, ok := config.ColumnIndexes[f]
 		if !ok {
 			if f == "AccountType" {
