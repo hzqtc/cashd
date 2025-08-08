@@ -24,9 +24,11 @@ type SummaryModel struct {
 	width  int
 	height int
 
-	transactions []*data.Transaction
-	totalIncome  float64
-	totalExpense float64
+	transactions  []*data.Transaction
+	incomeTxnNum  int
+	expenseTxnNum int
+	totalIncome   float64
+	totalExpense  float64
 
 	topIncomeCategories  []summaryEntry
 	topIncomeAccounts    []summaryEntry
@@ -53,12 +55,16 @@ func (m *SummaryModel) SetDimensions(width, height int) {
 func (m *SummaryModel) SetTransactions(transactions []*data.Transaction) {
 	m.transactions = transactions
 
+	m.incomeTxnNum = 0
+	m.expenseTxnNum = 0
 	m.totalIncome = 0
 	m.totalExpense = 0
 	for _, tx := range m.transactions {
 		if tx.Type == data.Income {
+			m.incomeTxnNum++
 			m.totalIncome += tx.Amount
 		} else {
+			m.expenseTxnNum++
 			m.totalExpense += tx.Amount
 		}
 	}
@@ -87,6 +93,8 @@ func (m *SummaryModel) resizeCharts() {
 
 func (m SummaryModel) View() string {
 	var s strings.Builder
+	s.WriteString(fmt.Sprintf("Income transactions: %d\n", m.incomeTxnNum))
+	s.WriteString(fmt.Sprintf("Expense transactions: %d\n", m.expenseTxnNum))
 	s.WriteString(fmt.Sprintf("Total income: $%.2f\n", m.totalIncome))
 	s.WriteString(fmt.Sprintf("Total expenses: $%.2f\n", m.totalExpense))
 

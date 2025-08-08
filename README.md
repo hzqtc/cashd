@@ -152,7 +152,7 @@ Here's an example of the structure:
     "^cash$": "Cash",
     "checking$": "Bank Account",
     "saving(s)?$": "Bank Account",
-    "credit(\s?card)?$": "Credit Card"
+    "card$": "Credit Card"
   }
 }
 ```
