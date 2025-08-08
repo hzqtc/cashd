@@ -1,0 +1,11 @@
+{
+  "columns": {
+    "Period": "Date",
+    "Accounts": "Account",
+    "Category": "Category",
+    "Note": "Description",
+    "USD": "Amount",
+    "Income/Expense": "Type"
+  },
+  "date_formats": ["2006-01-02", "01/02/2006"]
+}
