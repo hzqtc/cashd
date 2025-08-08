@@ -2,6 +2,7 @@ package main
 
 import (
 	"cashd/internal/model"
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -10,11 +11,22 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var flagShowHelp = pflag.BoolP("help", "h", false, "Show help message")
-var flagDebug = pflag.Bool("debug", false, "Enable debug mode to print stack trace on panic")
+//go:embed .version
+var version string
+
+var (
+	flagShowHelp    = pflag.BoolP("help", "h", false, "Show help message")
+	flagShowVersion = pflag.BoolP("version", "v", false, "Show app version")
+	flagDebug       = pflag.Bool("debug", false, "Enable debug mode to print stack trace on panic")
+)
 
 func main() {
 	pflag.Parse()
+
+	if *flagShowVersion {
+		fmt.Print(version)
+		os.Exit(0)
+	}
 
 	if *flagShowHelp {
 		pflag.Usage()

@@ -1,6 +1,6 @@
 BINARY_NAME = cashd
 GOBIN = $(HOME)/.local/bin
-TARGET_OS = darwin
+TARGET_OS = darwin linux
 TARGET_ARCH = arm64 amd64
 
 all: build
@@ -26,11 +26,15 @@ test:
 
 release:
 	mkdir -p release
-	for arch in $(TARGET_ARCH); do \
-		GOOS=$(TARGET_OS) GOARCH=$$arch go build -o release/$(BINARY_NAME)-$(TARGET_OS)-$$arch; \
-		tar -C release -czf release/$(BINARY_NAME)-$(TARGET_OS)-$$arch.tar.gz $(BINARY_NAME)-$(TARGET_OS)-$$arch; \
-		rm release/$(BINARY_NAME)-$(TARGET_OS)-$$arch; \
+	for os in $(TARGET_OS); do \
+		for arch in $(TARGET_ARCH); do \
+			echo "Building release/$(BINARY_NAME)-$$os-$$arch"; \
+			GOOS=$$os GOARCH=$$arch go build -o release/$(BINARY_NAME)-$$os-$$arch; \
+			tar -C release -czf release/$(BINARY_NAME)-$$os-$$arch.tar.gz $(BINARY_NAME)-$$os-$$arch; \
+			rm release/$(BINARY_NAME)-$$os-$$arch; \
+		done \
 	done
 	(cd release && shasum -a 256 *.tar.gz > checksum.txt)
+
 
 .PHONY: all build run clean install fmt vet test release
