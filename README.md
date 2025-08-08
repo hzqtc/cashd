@@ -1,4 +1,4 @@
-# cashd
+# 💰 cashd
 
 `cashd` is a fast and cozy interactive TUI for personal finance management.
 It allows you to effortlessly track, analyze, and gain insights into your financial transactions directly from your terminal.
@@ -9,7 +9,7 @@ It allows you to effortlessly track, analyze, and gain insights into your financ
   <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/account_view.png" width="400" />
 </p>
 
-## Features
+## ✨ Features
 
 - **Interactive TUI:** Navigate through your financial data with an intuitive and responsive terminal interface.
 - **Multiple Views:**
@@ -22,7 +22,7 @@ It allows you to effortlessly track, analyze, and gain insights into your financ
 - **Search Functionality:** Quickly find specific transactions using keywords.
 - **Financial Insights:** Visualize your financial trends with time-series charts for accounts and categories.
 
-## Limitations
+## 🚧 Limitations
 
 The following limitations are known:
 
@@ -32,7 +32,7 @@ The following limitations are known:
 - Specficially for `ledger` transactions
   - Only supports 2 postings per transaction
 
-### Supported Data Sources
+### 📊 Supported Data Sources
 
 `cashd` is designed to be flexible with your financial data. Currently, it supports:
 
@@ -40,17 +40,17 @@ The following limitations are known:
 - **Ledger/Hledger:** Integrate seamlessly with popular plain-text accounting tools like `ledger` and `hledger` by parsing their journal files.
   - Note: `cashd` invokes `ledger print` or `hledger print` and does not read journal files directly
 
-## Installation
+## ⬇️ Installation
 
-### Prerequsites
+### 🛠️ Prerequsites
 
 - A nerd font enabled terminal
 
-### Prebuilt binary
+### 📦 Prebuilt binary
 
 Prebuilt binaries can be found in Github release page.
 
-### Build from source
+### 🏗️ Build from source
 
 To build `cashd`, ensure you have Go installed (version 1.18 or higher).
 
@@ -68,9 +68,9 @@ To build `cashd`, ensure you have Go installed (version 1.18 or higher).
     make install
     ```
 
-## Usage
+## 🚀 Usage
 
-### Loading Data from Ledger/Hledger (default)
+### 📖 Loading Data from Ledger/Hledger (default)
 
 To load transactions from a Ledger or Hledger journal file, use the `--ledger` flag:
 
@@ -85,32 +85,23 @@ export LEDGER_FILE=/path/to/your/journal.dat
 cashd
 ```
 
-### Loading Data from a CSV File
+### 📂 Loading Data from a CSV File
 
-To load transactions from a CSV file, use the `--csv` flag:
-
-```bash
-cashd --csv path/to/your/transactions.csv
-```
-
-If your CSV file has a custom format, you can provide a JSON configuration file using the `--csv-config` flag:
+To load transactions from a CSV file, use the `--csv` flag and `--csv-config` flag:
 
 ```bash
 cashd --csv path/to/your/transactions.csv --csv-config path/to/your/config.json
 ```
 
-### Generating a Sample CSV File
+### 🧪 Generating a Sample CSV File
 
-The `sample` directory contains a Go program (`gencsv.go`) that can generate a sample CSV file for testing purposes.
+The `sample` directory contains `sample.csv` and `sample-csv-config.json` for testing.
 
 ```bash
-go run sample/gencsv.go -lines 10000
-cashd --csv sample.csv --csv-config sample-csv-config.json
+cashd --csv sample/sample.csv --csv-config sample/sample-csv-config.json
 ```
 
-This will create a `sample.csv` file in the current directory with 10000 random transactions.
-
-### Command Line Flags
+### 💻 Command Line Flags
 
 - `-h`, `--help`: Show help message.
 - `--csv <file_path>`: Specify the path to your CSV transaction file.
@@ -118,7 +109,7 @@ This will create a `sample.csv` file in the current directory with 10000 random 
 - `--ledger <file_path>`: Specify the path to your Ledger/Hledger journal file.
 - `--debug`: Enable debug mode (useful for development and troubleshooting).
 
-## CSV Configuration File Format
+## ⚙️ CSV Configuration File Format
 
 The CSV configuration file is a JSON file that defines how `cashd` should parse your CSV data.
 This is particularly useful if your CSV columns or data formats differ from the default expectations.
@@ -162,7 +153,7 @@ Here's an example of the structure:
 }
 ```
 
-### Config fields:
+### 📝 Config Fields:
 
 - `columns`: A map where keys are the actual column headers in your CSV file, and values are the corresponding internal `TransactionField` names (`Date`, `Type`, `AccountType`, `Account`, `Category`, `Amount`, `Description`).
 - `column_indexes` (Optional): A map where keys are `TransactionField` names and values are the 0-based index of the column in your CSV. If not provided, `cashd` will attempt to infer column indexes from the `columns` mapping and the CSV header.
@@ -171,7 +162,7 @@ Here's an example of the structure:
 - `account_types`: A map where keys are string values found in your CSV's "AccountType" column, and values are the internal `AccountType` (`Cash`, `Bank Account`, `Credit Card`).
 - `account_type_from_name`: A map where keys are regular expressions that will be matched against the `Account` name (case-insensitive), and values are the `AccountType` to assign if a match is found. This is useful for inferring account types when they are not explicitly provided in your CSV. If no match is found, it defaults to `Credit Card`.
 
-## Credit
+## 🙏 Credit
 
 This project is built using:
 
