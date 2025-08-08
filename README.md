@@ -4,6 +4,11 @@
 It allows you to effortlessly track, analyze, and gain insights into your financial transactions directly from your terminal.
 `cashd` currently supports ledger/hledger and CSV as data sources
 
+<p float="left">
+  <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/transaction_view.png" width="500" />
+  <img src="https://raw.github.com/hzqtc/cashd/master/screenshots/account_view.png" width="500" />
+</p>
+
 ## Features
 
 - **Interactive TUI:** Navigate through your financial data with an intuitive and responsive terminal interface.
@@ -175,4 +180,3 @@ This project is built using:
 - [lipgloss](https://github.com/charmbracelet/lipgloss)
 - [ntcharts](https://github.com/NimbleMarkets/ntcharts)
 - [pflag](https://github.com/spf13/pflag)
-
