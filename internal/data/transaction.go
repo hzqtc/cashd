@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -43,6 +44,27 @@ type Transaction struct {
 	Category    string
 	Amount      float64
 	Description string
+}
+
+type TxnField string
+
+var TransactionFields = func() []TxnField {
+	fields := []TxnField{}
+	t := reflect.TypeOf(Transaction{})
+	for i := range t.NumField() {
+		fields = append(fields, TxnField(t.Field(i).Name))
+	}
+	return fields
+}()
+
+func (t *Transaction) IsValid() bool {
+	return !t.Date.IsZero() &&
+		t.Type != "" &&
+		t.AccountType != "" &&
+		t.Account != "" &&
+		t.Category != "" &&
+		t.Amount > 0 &&
+		t.Description != ""
 }
 
 func (t *Transaction) Symbol() string {

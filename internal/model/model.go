@@ -2,6 +2,7 @@ package model
 
 import (
 	"cashd/internal/data"
+	"cashd/internal/data/csv"
 	"cashd/internal/data/ledger"
 	"cashd/internal/ui"
 	"fmt"
@@ -311,8 +312,7 @@ func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {
 }
 
 func loadTransactions() tea.Cmd {
-	// TODO: add csv as a data source
-	datasources := []data.DataSource{ledger.LedgerDataSource{}}
+	datasources := []data.DataSource{ledger.LedgerDataSource{}, csv.CsvDataSource{}}
 	for _, ds := range datasources {
 		if ds.Preferred() {
 			return loadTransactionsFromDataSource(ds)
