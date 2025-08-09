@@ -27,6 +27,7 @@ type DatePickerModel struct {
 	byMonth   key.Binding
 	byQuarter key.Binding
 	byYear    key.Binding
+	allTime   key.Binding
 }
 
 type DateRangeChangedMsg struct {
@@ -53,6 +54,7 @@ func NewDatePickerModel() DatePickerModel {
 		byMonth:   key.NewBinding(key.WithKeys("m")),
 		byQuarter: key.NewBinding(key.WithKeys("q")),
 		byYear:    key.NewBinding(key.WithKeys("y")),
+		allTime:   key.NewBinding(key.WithKeys("a")),
 	}
 }
 
@@ -86,29 +88,15 @@ func (m DatePickerModel) Update(msg tea.Msg) (DatePickerModel, tea.Cmd) {
 		case key.Matches(msg, m.next):
 			cmd = m.nextDateRange()
 		case key.Matches(msg, m.byWeek):
-			if m.inc == date.Weekly {
-				return m, nil
-			}
-			m.inc = date.Weekly
-			cmd = m.updateIncrement()
+			cmd = m.updateIncrement(date.Weekly)
 		case key.Matches(msg, m.byMonth):
-			if m.inc == date.Monthly {
-				return m, nil
-			}
-			m.inc = date.Monthly
-			cmd = m.updateIncrement()
+			cmd = m.updateIncrement(date.Monthly)
 		case key.Matches(msg, m.byQuarter):
-			if m.inc == date.Quarterly {
-				return m, nil
-			}
-			m.inc = date.Quarterly
-			cmd = m.updateIncrement()
+			cmd = m.updateIncrement(date.Quarterly)
 		case key.Matches(msg, m.byYear):
-			if m.inc == date.Annually {
-				return m, nil
-			}
-			m.inc = date.Annually
-			cmd = m.updateIncrement()
+			cmd = m.updateIncrement(date.Annually)
+		case key.Matches(msg, m.allTime):
+			cmd = m.updateIncrement(date.AllTime)
 		}
 	}
 	return m, cmd
@@ -119,10 +107,27 @@ func (m *DatePickerModel) SelectedDateRange() (time.Time, time.Time) {
 }
 
 func (m *DatePickerModel) ViewDateRange() string {
-	return m.inc.FormatDate(m.startDate)
+	switch m.inc {
+	case date.Weekly:
+		year, week := m.startDate.ISOWeek()
+		return fmt.Sprintf("%d Week %02d", year, week)
+	case date.Monthly:
+		return m.startDate.Format("2006 January")
+	case date.Quarterly:
+		return fmt.Sprintf("%d Q%d", m.startDate.Year(), date.QuarterOfYear(m.startDate))
+	case date.Annually:
+		return m.startDate.Format("2006")
+	case date.AllTime:
+		return m.inc.String()
+	default:
+		panic(fmt.Sprintf("Unexpected date increment: %s", m.inc))
+	}
 }
 
 func (m *DatePickerModel) resetDateRange() tea.Cmd {
+	if m.inc == date.AllTime {
+		return nil
+	}
 	// Reset to current date while keeping increment
 	m.startDate = m.inc.FirstDayInIncrement(time.Now())
 	m.endDate = m.inc.AddIncrement(m.startDate)
@@ -131,6 +136,9 @@ func (m *DatePickerModel) resetDateRange() tea.Cmd {
 }
 
 func (m *DatePickerModel) nextDateRange() tea.Cmd {
+	if m.inc == date.AllTime {
+		return nil
+	}
 	if nextEndDate := m.inc.AddIncrement(m.endDate); !nextEndDate.After(m.maxEndDate()) {
 		m.startDate = m.inc.AddIncrement(m.startDate)
 		m.endDate = nextEndDate
@@ -141,6 +149,9 @@ func (m *DatePickerModel) nextDateRange() tea.Cmd {
 }
 
 func (m *DatePickerModel) prevDateRange() tea.Cmd {
+	if m.inc == date.AllTime {
+		return nil
+	}
 	if prevStartDate := m.inc.SubtractIncrement(m.startDate); !prevStartDate.Before(m.minStartDate()) {
 		m.startDate = prevStartDate
 		m.endDate = m.inc.SubtractIncrement(m.endDate)
@@ -155,24 +166,28 @@ func (m DatePickerModel) View() string {
 	var rightStr strings.Builder
 
 	// Current date increment and current date range selection
-	leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, m.ViewDateRange()))
+	if m.inc == date.AllTime {
+		leftStr.WriteString(fmt.Sprintf("%s", m.ViewDateRange()))
+	} else {
+		leftStr.WriteString(fmt.Sprintf("%s: < %s >", m.inc, m.ViewDateRange()))
+	}
 
 	// Key bindings
-	rightStr.WriteString("Navigate: ")
 	rightStr.WriteString(keyStyle.Render("h/←") + " prev")
-	rightStr.WriteString(" ")
+	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render("l/→") + " next")
-	rightStr.WriteString(" ")
+	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render("0") + " reset")
-	rightStr.WriteString(" ")
-	rightStr.WriteString("Switch to: ")
+	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render(m.byWeek.Keys()[0]) + "eekly")
-	rightStr.WriteString(" ")
+	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render(m.byMonth.Keys()[0]) + "onthly")
-	rightStr.WriteString(" ")
+	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render(m.byQuarter.Keys()[0]) + "uarterly")
-	rightStr.WriteString(" ")
+	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render(m.byYear.Keys()[0]) + "early")
+	rightStr.WriteString(" | ")
+	rightStr.WriteString(keyStyle.Render(m.allTime.Keys()[0]) + "ll time")
 
 	style := lipgloss.NewStyle().
 		Border(getRoundedBorderWithTitle(
@@ -194,11 +209,21 @@ func (m *DatePickerModel) Inc() date.Increment {
 	return m.inc
 }
 
-func (m *DatePickerModel) updateIncrement() tea.Cmd {
-	// Snap start and end dates to increment
-	m.startDate = m.inc.FirstDayInIncrement(m.startDate)
-	m.endDate = m.inc.AddIncrement(m.startDate)
-	m.clampDateRangeToLimits()
+func (m *DatePickerModel) updateIncrement(newInc date.Increment) tea.Cmd {
+	if m.inc == newInc {
+		return nil
+	}
+
+	m.inc = newInc
+	if m.inc == date.AllTime {
+		m.startDate = m.minDate
+		m.endDate = m.maxDate
+	} else {
+		// Snap start and end dates to increment
+		m.startDate = m.inc.FirstDayInIncrement(m.startDate)
+		m.endDate = m.inc.AddIncrement(m.startDate)
+		m.clampDateRangeToLimits()
+	}
 	return tea.Batch(m.sendIncrementChangedMsg(), m.sendDateRangeChangedMsg())
 }
 

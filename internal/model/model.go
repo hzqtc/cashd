@@ -261,7 +261,7 @@ func (m *Model) onSelectedAccountChanged() {
 
 	entries := aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected())
 	m.accountChart.SetEntries(
-		fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.getTimeSeriesRange(entries)),
+		fmt.Sprintf("Account time series: %s", m.accountTable.Selected()),
 		entries,
 		m.datePicker.Inc(),
 	)
@@ -276,7 +276,7 @@ func (m *Model) onSelectedCategoryChanged() {
 
 	entries := aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.Selected())
 	m.categoryChart.SetEntries(
-		fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.getTimeSeriesRange(entries)),
+		fmt.Sprintf("Category time series: %s", m.categoryTable.Selected()),
 		entries,
 		m.datePicker.Inc(),
 	)
@@ -286,29 +286,16 @@ func (m *Model) onSelectedCategoryChanged() {
 
 func (m *Model) updateAccountInsights() {
 	m.accountInsights.SetTransactionsWithAccount(m.viewTransactions, m.accountTable.Selected())
-	m.accountInsights.SetName(fmt.Sprintf("%s: %s", m.accountTable.Selected(), m.datePicker.ViewDateRange()))
+	m.accountInsights.SetName(fmt.Sprintf("%s insights: %s", m.accountTable.Selected(), m.datePicker.ViewDateRange()))
 
 	m.updateLayout()
 }
 
 func (m *Model) updateCategoryInsights() {
 	m.categoryInsights.SetTransactionsWithCategory(m.viewTransactions, m.categoryTable.Selected())
-	m.categoryInsights.SetName(fmt.Sprintf("%s: %s", m.categoryTable.Selected(), m.datePicker.ViewDateRange()))
+	m.categoryInsights.SetName(fmt.Sprintf("%s insights: %s", m.categoryTable.Selected(), m.datePicker.ViewDateRange()))
 
 	m.updateLayout()
-}
-
-func (m *Model) getTimeSeriesRange(entries []*ui.TsChartEntry) string {
-	if len(entries) == 0 {
-		return ""
-	}
-	firstDate := entries[0].Date
-	lastDate := entries[len(entries)-1].Date
-	return fmt.Sprintf(
-		"%s - %s",
-		m.datePicker.Inc().FormatDate(firstDate),
-		m.datePicker.Inc().FormatDate(lastDate),
-	)
 }
 
 func loadTransactions() tea.Cmd {
