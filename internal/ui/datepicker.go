@@ -177,7 +177,7 @@ func (m DatePickerModel) View() string {
 	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render("l/→") + " next")
 	rightStr.WriteString(" | ")
-	rightStr.WriteString(keyStyle.Render("0") + " reset")
+	rightStr.WriteString(keyStyle.Render("0") + " now")
 	rightStr.WriteString(" | ")
 	rightStr.WriteString(keyStyle.Render(m.byWeek.Keys()[0]) + "eekly")
 	rightStr.WriteString(" | ")
