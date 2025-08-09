@@ -114,7 +114,7 @@ cashd --csv sample/sample.csv --csv-config sample/sample-csv-config.json
 - `--csv <file_path>`: Specify the path to your CSV transaction file.
 - `--csv-config <file_path>`: Specify the path to your CSV configuration JSON file.
 - `--ledger <file_path>`: Specify the path to your Ledger/Hledger journal file.
-- `--debug`: Enable debug mode (useful for development and troubleshooting).
+- `--hide-help`: Hide in-app help panel
 
 ## ⚙️ CSV Configuration File Format
 

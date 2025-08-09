@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var helpVisible bool
+var hideHelp bool
 
 func init() {
-	pflag.BoolVar(&helpVisible, "help-panel", true, "Show help panel in the TUI")
+	pflag.BoolVar(&hideHelp, "hide-help", false, "Hide the help panel in the TUI")
 }
 
 type HelpModel struct {
@@ -20,7 +20,7 @@ type HelpModel struct {
 
 func NewHelpModel() HelpModel {
 	return HelpModel{
-		visible: helpVisible,
+		visible: !hideHelp,
 	}
 }
 
