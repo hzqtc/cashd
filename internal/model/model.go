@@ -91,7 +91,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, m.globalQuit) {
 			return m, tea.Quit
+		} else if m.searchInput.Focused() {
+			return m, m.processSearchInputKeys(msg)
 		}
+
 		// Send key to the active view
 		switch m.navBar.ViewMode() {
 		case ui.TransactionView:
@@ -141,15 +144,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m *Model) processSearchInputKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	if key.Matches(msg, m.clearSearch) {
+		m.searchInput.Blur()
+		return m.searchInput.Clear()
+	} else {
+		m.searchInput, cmd = m.searchInput.Update(msg)
+		return cmd
+	}
+}
+
 func (m *Model) processTransactionViewKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmd tea.Cmd
 
 	if key.Matches(msg, m.clearSearch) {
 		m.searchInput.Blur()
 		return m.searchInput.Clear()
-	} else if m.searchInput.Focused() {
-		m.searchInput, cmd = m.searchInput.Update(msg)
-		return cmd
 	} else {
 		switch {
 		case key.Matches(msg, m.activateSearch):
