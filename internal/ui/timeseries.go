@@ -117,10 +117,12 @@ func dateLabelFormatter(inc date.Increment) linechart.LabelFormatter {
 		case date.Weekly:
 			_, week := d.ISOWeek()
 			return fmt.Sprintf("%s'W%02d", d.Format("06"), week)
-		case date.Monthly, date.Annually, date.AllTime:
+		case date.Monthly:
 			return d.Format("06'Jan")
 		case date.Quarterly:
 			return fmt.Sprintf("%s'Q%d", d.Format("06"), date.QuarterOfYear(d))
+		case date.Annually, date.AllTime:
+			return d.Format("2006")
 		default:
 			panic(fmt.Sprintf("Unexpected date increment: %s", inc))
 		}
