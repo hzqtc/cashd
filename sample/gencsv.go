@@ -44,7 +44,7 @@ func main() {
 		} else {
 			category = expenseCategories[rand.Intn(len(expenseCategories))]
 		}
-		description := fmt.Sprintf("Sample transaction %d", i+1)
+		description := fmt.Sprintf("Transaction %d", i+1)
 		amount := fmt.Sprintf("%.2f", rand.Float64()*1000)
 
 		record := []string{date, account, category, description, amount, typ}
