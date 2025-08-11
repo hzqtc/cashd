@@ -72,7 +72,7 @@ func (m *TimeSeriesChartModel) redraw() {
 		tschart.WithDataSetStyle(string(data.Income), tsChartIncomeLineStyle),   // Income style
 		tschart.WithDataSetStyle(string(data.Expense), tsChartExpenseLineStyle), // Expense style
 		tschart.WithXLabelFormatter(dateLabelFormatter(m.inc)),
-		tschart.WithYLabelFormatter(moneyAmountFormatter()),
+		tschart.WithYLabelFormatter(moneyAmountFormatter),
 	)
 
 	// Push data to the respective datasets
@@ -104,10 +104,8 @@ func (m TimeSeriesChartModel) renderLegend() string {
 	)
 }
 
-func moneyAmountFormatter() linechart.LabelFormatter {
-	return func(i int, v float64) string {
-		return fmt.Sprintf("$%.0f", math.Round(v/10)*10)
-	}
+func moneyAmountFormatter(i int, v float64) string {
+	return fmt.Sprintf("$%.0f", math.Round(v/10)*10)
 }
 
 func dateLabelFormatter(inc date.Increment) linechart.LabelFormatter {
