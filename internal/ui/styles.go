@@ -11,14 +11,14 @@ const (
 )
 
 const (
-	symbolColWidth      = 2
+	symbolColWidth      = 1
 	dateColWidth        = 12
 	typeColWidth        = 8
 	accountTypeColWidth = 12
-	accountColWidth     = 25
-	categoryColWidth    = 20
-	descColWidth        = 28
-	amountColWidth      = 10
+	accountColWidth     = 20
+	categoryColWidth    = 15
+	descColWidth        = 20
+	amountColWidth      = 12
 	numberColWidth      = 8
 )
 
