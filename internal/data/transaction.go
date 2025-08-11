@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -139,14 +141,176 @@ func (t *Transaction) Matches(kws []string) bool {
 	for _, kw := range kws {
 		// Requires the transaction to contain ALL keywords
 		// So we can return false on any unmatched keyword
-		if !strings.Contains(t.Date.Format("2006-01-02"), kw) &&
-			!strings.Contains(strings.ToLower(string(t.Type)), kw) &&
-			!strings.Contains(strings.ToLower(t.Account), kw) &&
-			!strings.Contains(strings.ToLower(t.Category), kw) &&
-			!strings.Contains(fmt.Sprintf("%.2f", t.Amount), kw) &&
-			!strings.Contains(strings.ToLower(t.Description), kw) {
+		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixDate); hasPrefix {
+			if t.matchesDate(trimmed) {
+				continue
+			} else {
+				return false
+			}
+		}
+		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixType); hasPrefix {
+			if t.matchesType(trimmed) {
+				continue
+			} else {
+				return false
+			}
+		}
+		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixAccount); hasPrefix {
+			if t.matchesAccount(trimmed) {
+				continue
+			} else {
+				return false
+			}
+		}
+		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixCategory); hasPrefix {
+			if t.matchesCategory(trimmed) {
+				continue
+			} else {
+				return false
+			}
+		}
+		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixAmount); hasPrefix {
+			if t.matchesAmount(trimmed) {
+				continue
+			} else {
+				return false
+			}
+		}
+		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixDesc); hasPrefix {
+			if t.matchesDescription(trimmed) {
+				continue
+			} else {
+				return false
+			}
+		}
+		// Check all fields for unprefix keywords
+		if !t.matchesDate(kw) &&
+			!t.matchesType(kw) &&
+			!t.matchesAccount(kw) &&
+			!t.matchesCategory(kw) &&
+			!t.matchesAmount(kw) &&
+			!t.matchesDescription(kw) {
 			return false
 		}
 	}
 	return true
+}
+
+const (
+	kwPrefixDate     = "d:"
+	kwPrefixType     = "t:"
+	kwPrefixAccount  = "a:"
+	kwPrefixCategory = "c:"
+	kwPrefixAmount   = "m:"
+	kwPrefixDesc     = "p:"
+)
+
+type matchOp string
+
+const (
+	noneOp  matchOp = ""
+	larger  matchOp = ">"
+	smaller matchOp = "<"
+)
+
+var (
+	dateFormats = []string{"2006-01-02", "2006-01", "2006"}
+	// Matches optional < or >, then date in one of the formats anove
+	dateRegexp = regexp.MustCompile(`^([<>])?(\d{4}(?:-\d{2}(?:-\d{2})?)?)$`)
+	// Matches optional < or >, then a float number
+	amountRegexp = regexp.MustCompile(`^([<>])?([0-9]*\.?[0-9]+)?$`)
+)
+
+func (t *Transaction) matchesDate(kw string) bool {
+	op, dateStr := parseDateKeyword(kw)
+	if op == noneOp {
+		// No operator, just string matching
+		if dateStr != "" {
+			return strings.Contains(t.Date.Format(dateFormats[0]), dateStr)
+		} else {
+			return false
+		}
+	} else {
+		// Date comparison using the operator
+		date := parseDate(dateStr)
+		if date == nil {
+			// Should not happen since date format is ensured by regexp
+			return false
+		}
+		switch op {
+		case larger:
+			return t.Date.After(*date)
+		case smaller:
+			return t.Date.Before(*date)
+		default:
+			panic(fmt.Sprintf("unexpected search keyword operator: %s", op))
+		}
+	}
+}
+
+func parseDateKeyword(kw string) (matchOp, string) {
+	matches := dateRegexp.FindStringSubmatch(kw)
+	if matches == nil {
+		return noneOp, ""
+	} else {
+		return matchOp(matches[1]), matches[2]
+	}
+}
+
+func parseDate(dateStr string) *time.Time {
+	for _, f := range dateFormats {
+		if d, err := time.Parse(f, dateStr); err == nil {
+			return &d
+		}
+	}
+	return nil
+}
+
+func (t *Transaction) matchesType(kw string) bool {
+	return strings.Contains(strings.ToLower(string(t.Type)), kw)
+}
+
+func (t *Transaction) matchesAccount(kw string) bool {
+	return strings.Contains(strings.ToLower(t.Account), kw)
+}
+
+func (t *Transaction) matchesCategory(kw string) bool {
+	return strings.Contains(strings.ToLower(t.Category), kw)
+}
+
+func (t *Transaction) matchesAmount(kw string) bool {
+	op, num := parseAmountKeyword(kw)
+	if op == noneOp {
+		// No operator, just string matching
+		if num != "" {
+			return strings.Contains(fmt.Sprintf("%.2f", t.Amount), num)
+		} else {
+			return false
+		}
+	} else {
+		// Value comparison using the operator
+		// Ignoring the error since format is ensured by regexp match
+		targetAmount, _ := strconv.ParseFloat(num, 64)
+		switch op {
+		case larger:
+			return t.Amount > targetAmount
+		case smaller:
+			return t.Amount < targetAmount
+		default:
+			panic(fmt.Sprintf("unexpected search keyword operator: %s", op))
+		}
+	}
+}
+
+func parseAmountKeyword(kw string) (matchOp, string) {
+	matches := amountRegexp.FindStringSubmatch(kw)
+	if matches == nil {
+		return noneOp, "" // no match at all
+	} else {
+		return matchOp(matches[1]), matches[2]
+	}
+}
+
+func (t *Transaction) matchesDescription(kw string) bool {
+	return strings.Contains(strings.ToLower(t.Description), kw)
 }

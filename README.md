@@ -108,6 +108,24 @@ The `sample` directory contains `sample.csv` and `sample-csv-config.json` for te
 cashd --csv sample/sample.csv --csv-config sample/sample-csv-config.json
 ```
 
+### Search Syntax
+
+Searching the transactions is easy by pressing `/` key from transactions view.
+By default, cashd matches each keyword individually in all transaction fields.
+Use keyword prefix to specify field for matching"
+
+- `d:` match transaction Date, also supports `>` and `<` operators
+  - For example, `d:2020-04-05`, or `d:>2020 d:<2023`
+- `t:` match transaction Type
+- `a:` match transaction Account
+- `c:` match transaction Category
+- `m:` match transaction Amount, also supports `>` and `<` operators
+  - For example, `m:600`, or `m:>2000 m:<2500`
+- `p:` match transaction Description
+
+> [!NOTE]
+> All keywords are combined using `AND` logic, meaning a transaction must match all keywords to show in search results.
+
 ### 💻 Command Line Flags
 
 - `-h`, `--help`: Show help message.
