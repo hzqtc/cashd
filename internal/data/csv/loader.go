@@ -4,7 +4,6 @@ import (
 	"cashd/internal/data"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -40,12 +39,10 @@ func (s CsvDataSource) LoadTransactions() ([]*data.Transaction, error) {
 
 	for _, filePath := range resolvedFilePaths {
 		go func(fp string) {
-			log.Printf("start loading csv %s", filePath)
 			txns, err := readCsv(fp)
 			if err != nil {
 				errChan <- err
 			} else {
-				log.Printf("loaded csv %s", filePath)
 				txnChan <- txns
 			}
 		}(filePath)
