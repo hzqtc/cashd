@@ -137,7 +137,10 @@ A keyword can be turned into negative keyword by adding `-` prefix.
 ### 💻 Command Line Flags
 
 - `-h`, `--help`: Show help message.
-- `--csv <file_path>`: Specify the path to your CSV transaction file.
+- `--csv <file_path>`: Specify the path to your CSV transaction file. This flag supports:
+  - multiple files separated by `,`, e.g. `--csv "sample1.csv,sample2.csv"`
+  - multiple flags each specifying one file, e.g. `--csv sample1.csv --csv sample2.csv`
+  - glob, e.g. `--csv "*.csv"`
 - `--csv-config <file_path>`: Specify the path to your CSV configuration JSON file.
 - `--ledger <file_path>`: Specify the path to your Ledger/Hledger journal file.
 - `--hide-help`: Hide in-app help panel
