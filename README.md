@@ -126,6 +126,14 @@ Use keyword prefix to specify field for matching"
 > [!NOTE]
 > All keywords are combined using `AND` logic, meaning a transaction must match all keywords to show in search results.
 
+#### Negative keywords
+
+A keyword can be turned into negative keyword by adding `-` prefix.
+`-` can be combined with other keyword prefixes to perform complex search queries, for examples:
+
+- `m:>4999 t:expense -c:loan -c:tax`: find expenses that are more than $4999 and not in loan or tax categories
+- `t:income -c:salary m:>1999`: find income transactions that are more than $1999 and not from salary
+
 ### 💻 Command Line Flags
 
 - `-h`, `--help`: Show help message.

@@ -141,62 +141,48 @@ func (t *Transaction) Matches(kws []string) bool {
 	for _, kw := range kws {
 		// Requires the transaction to contain ALL keywords
 		// So we can return false on any unmatched keyword
-		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixDate); hasPrefix {
-			if t.matchesDate(trimmed) {
-				continue
-			} else {
+		if kw, negative := strings.CutPrefix(kw, negativeKeywordPrefix); negative {
+			if t.matchKeyword(kw) {
 				return false
 			}
-		}
-		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixType); hasPrefix {
-			if t.matchesType(trimmed) {
-				continue
-			} else {
-				return false
-			}
-		}
-		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixAccount); hasPrefix {
-			if t.matchesAccount(trimmed) {
-				continue
-			} else {
-				return false
-			}
-		}
-		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixCategory); hasPrefix {
-			if t.matchesCategory(trimmed) {
-				continue
-			} else {
-				return false
-			}
-		}
-		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixAmount); hasPrefix {
-			if t.matchesAmount(trimmed) {
-				continue
-			} else {
-				return false
-			}
-		}
-		if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixDesc); hasPrefix {
-			if t.matchesDescription(trimmed) {
-				continue
-			} else {
-				return false
-			}
-		}
-		// Check all fields for unprefix keywords
-		if !t.matchesDate(kw) &&
-			!t.matchesType(kw) &&
-			!t.matchesAccount(kw) &&
-			!t.matchesCategory(kw) &&
-			!t.matchesAmount(kw) &&
-			!t.matchesDescription(kw) {
+		} else if !t.matchKeyword(kw) {
 			return false
 		}
 	}
 	return true
 }
 
+func (t *Transaction) matchKeyword(kw string) bool {
+	if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixDate); hasPrefix {
+		return t.matchesDate(trimmed)
+	}
+	if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixType); hasPrefix {
+		return t.matchesType(trimmed)
+	}
+	if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixAccount); hasPrefix {
+		return t.matchesAccount(trimmed)
+	}
+	if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixCategory); hasPrefix {
+		return t.matchesCategory(trimmed)
+	}
+	if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixAmount); hasPrefix {
+		return t.matchesAmount(trimmed)
+	}
+	if trimmed, hasPrefix := strings.CutPrefix(kw, kwPrefixDesc); hasPrefix {
+		return t.matchesDescription(trimmed)
+	}
+	// Check all fields for unprefix keywords
+	return t.matchesDate(kw) ||
+		t.matchesType(kw) ||
+		t.matchesAccount(kw) ||
+		t.matchesCategory(kw) ||
+		t.matchesAmount(kw) ||
+		t.matchesDescription(kw)
+}
+
 const (
+	negativeKeywordPrefix = "-"
+
 	kwPrefixDate     = "d:"
 	kwPrefixType     = "t:"
 	kwPrefixAccount  = "a:"
