@@ -19,6 +19,10 @@ func (m Model) View() string {
 		return fmt.Sprintf("An error occurred: %s\nPress 'ctrl + c' to quit.", m.errMsg)
 	}
 
+	if m.loadingScreen.IsLoading() {
+		return m.loadingScreen.View()
+	}
+
 	var top, body string
 	top = lipgloss.JoinHorizontal(lipgloss.Top,
 		m.navBar.View(),

@@ -33,6 +33,7 @@ type Model struct {
 
 	errMsg string
 
+	loadingScreen    ui.LoadingScreenModel
 	datePicker       ui.DatePickerModel
 	navBar           ui.NavBarModel
 	searchInput      ui.SearchInputModel
@@ -57,6 +58,7 @@ type Model struct {
 
 func NewModel() Model {
 	return Model{
+		loadingScreen:    ui.NewLoadingScreenModel(),
 		transactionTable: ui.NewSortableTableModel(tableTransaction, ui.TransactionTableConfig),
 		datePicker:       ui.NewDatePickerModel(),
 		navBar:           ui.NewNavBarModel(),
@@ -78,7 +80,7 @@ func NewModel() Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return loadTransactions()
+	return tea.Batch(m.loadingScreen.Init(), loadTransactions())
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -109,21 +111,28 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		m.navBar, cmd = m.navBar.Update(msg)
 		cmds = append(cmds, cmd)
+
 	case dataLoadingSuccessMsg:
+		cmds = append(cmds, m.loadingScreen.Stop())
 		m.allTransactions = msg.transactions
 		m.updateDatePickerLimits()
 		cmds = append(cmds, m.filterTransactions())
 		m.onSelectedAccountChanged()
 		m.onSelectedCategoryChanged()
+
 	case dataLoadingErrorMsg:
+		cmds = append(cmds, m.loadingScreen.Stop())
 		m.errMsg = msg.err.Error()
+
 	case ui.DateRangeChangedMsg:
 		cmds = append(cmds, m.filterTransactions())
 		m.updateAccountInsights()
 		m.updateCategoryInsights()
+
 	case ui.DateIncrementChangedMsg:
 		m.onSelectedAccountChanged()
 		m.onSelectedCategoryChanged()
+
 	case ui.TableSelectionChangedMsg:
 		switch msg.TableName {
 		case tableAccount:
@@ -131,14 +140,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tableCategory:
 			m.onSelectedCategoryChanged()
 		}
+
 	case ui.SearchMsg:
 		m.searchTransactions()
+
 	case ui.NavigationMsg:
-		// No logic change
+		// Handled in view.go; nothing to do here
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateLayout()
+
+	default:
+		if m.loadingScreen.Handles(msg) {
+			m.loadingScreen, cmd = m.loadingScreen.Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	return m, tea.Batch(cmds...)
