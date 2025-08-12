@@ -43,7 +43,7 @@ func (m HelpModel) View() string {
 	var s strings.Builder
 	s.WriteString(fmt.Sprintf(
 		"General: %s quit | %s toggle help | %s search transactiona | %s clear search\n",
-		keyStyle.Render("ctrl + c"),
+		keyStyle.Render("^c"),
 		keyStyle.Render("?"),
 		keyStyle.Render("/"),
 		keyStyle.Render("esc"),
