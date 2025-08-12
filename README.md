@@ -110,9 +110,9 @@ cashd --csv sample/sample.csv --csv-config sample/sample-csv-config.json
 
 ### Search Syntax
 
-Searching the transactions is easy by pressing `/` key from transactions view.
-By default, cashd matches each keyword individually in all transaction fields.
-Use keyword prefix to specify field for matching"
+Searching transactions is easy by pressing the `/` key from the transactions view.
+By default, `cashd` matches each keyword individually in all transaction fields.
+Use a keyword prefix to specify a field for matching.
 
 - `d:` match transaction Date, also supports `>` and `<` operators
   - For example, `d:2020-04-05`, or `d:>2020 d:<2023`
@@ -123,16 +123,23 @@ Use keyword prefix to specify field for matching"
   - For example, `m:600`, or `m:>2000 m:<2500`
 - `p:` match transaction Description
 
-> [!NOTE]
-> All keywords are combined using `AND` logic, meaning a transaction must match all keywords to show in search results.
+#### OR Logic
+
+You can use `OR` to combine multiple search queries. Each query separated by `OR` is treated as a separate group,
+and a transaction will be shown if it matches any of these groups.
+
+For example:
+
+- `c:food OR c:groceries`: finds transactions with category "food" or "groceries"
+- `c:food m:>10 OR c:groceries m:>5`: finds transactions with category "food" and amount >10 or with category "groceries" and amount >5
 
 #### Negative keywords
 
-A keyword can be turned into negative keyword by adding `-` prefix.
-`-` can be combined with other keyword prefixes to perform complex search queries, for examples:
+A keyword can be turned into a negative keyword by adding a `-` prefix.
+`-` can be combined with other keyword prefixes to perform complex search queries, for example:
 
-- `m:>4999 t:expense -c:loan -c:tax`: find expenses that are more than $4999 and not in loan or tax categories
-- `t:income -c:salary m:>1999`: find income transactions that are more than $1999 and not from salary
+- `m:>4999 t:expense -c:loan -c:tax`: find expenses that are more than $4999 and not in the "loan" or "tax" categories
+- `t:income -c:salary m:>1999`: find income transactions that are more than $1999 and not from "salary"
 
 ### 💻 Command Line Flags
 

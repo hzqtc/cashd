@@ -266,18 +266,25 @@ func (m *Model) filterTransactions() tea.Cmd {
 
 func (m *Model) searchTransactions() {
 	var matchingTransactions []*data.Transaction
-	searchQuery := strings.ToLower(m.searchInput.Value())
-	keywords := strings.Fields(searchQuery)
-	if len(keywords) == 0 {
+	searchQuery := strings.TrimSpace(m.searchInput.Value())
+
+	if searchQuery == "" {
 		matchingTransactions = m.viewTransactions
 	} else {
 		matchingTransactions = []*data.Transaction{}
+		subQueries := strings.Split(searchQuery, " OR ")
 		for _, t := range m.viewTransactions {
-			if t.Matches(keywords) {
-				matchingTransactions = append(matchingTransactions, t)
+			for _, query := range subQueries {
+				keywords := strings.Fields(strings.ToLower(query))
+				if len(keywords) > 0 && t.Matches(keywords) {
+					// If any of the sub-queries match, the transaction  a match
+					matchingTransactions = append(matchingTransactions, t)
+					break
+				}
 			}
 		}
 	}
+
 	// Search query only applies to transaction view (transaction table & summary)
 	m.transactionTable.SetTransactions(matchingTransactions)
 	m.summary.SetTransactions(matchingTransactions)
