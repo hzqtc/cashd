@@ -218,7 +218,7 @@ func getTableRows(cols []column, data []any) []table.Row {
 			case float64:
 				formattedColData = fmt.Sprintf("$%.2f", colData)
 			case time.Time:
-				formattedColData = colData.(time.Time).Format("2006-01-02")
+				formattedColData = colData.(time.Time).Format(time.DateOnly)
 			default:
 				panic(fmt.Sprintf("unexpected table data type: %v", colData))
 			}

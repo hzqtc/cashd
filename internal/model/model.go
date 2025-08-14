@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -246,7 +247,7 @@ func (m *Model) filterTransactions() tea.Cmd {
 	})
 
 	if startIndex > endIndex {
-		panic(fmt.Sprintf("Invalid date range: %s - %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
+		panic(fmt.Sprintf("Invalid date range: %s - %s", startDate.Format(time.DateOnly), endDate.Format(time.DateOnly)))
 	}
 
 	// Get transactions within date range

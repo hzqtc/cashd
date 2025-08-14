@@ -65,5 +65,5 @@ func randomDate() string {
 	randSec := time.Duration(rand.Int63n(int64(diff)))
 
 	randomTime := start.Add(randSec)
-	return randomTime.Format("2006-01-02")
+	return randomTime.Format(time.DateOnly)
 }

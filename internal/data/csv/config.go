@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/spf13/pflag"
 )
@@ -58,10 +59,8 @@ var defaultConfig = func() *config {
 	c := &config{
 		ColumnIndexes: map[data.TransactionField]int{},
 		DateFormats: []string{
-			"2006-01-02",
-			"2006-01-02 15:04:05",
-			"01/02/2006",
-			"01/02/2006 15:04:05",
+			time.DateOnly,
+			time.DateTime,
 		},
 		TxnTypeMappings: map[string]data.TransactionType{
 			"income":  data.Income,

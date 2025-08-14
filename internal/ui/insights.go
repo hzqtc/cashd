@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/NimbleMarkets/ntcharts/canvas/runes"
 	"github.com/charmbracelet/lipgloss"
@@ -141,7 +142,7 @@ func (m InsightsModel) View() string {
 func formatTransaction(t *data.Transaction) string {
 	return fmt.Sprintf(
 		"%s %*s %s\n",
-		t.Date.Format("2006-01-02"),
+		t.Date.Format(time.DateOnly),
 		amountColWidth,
 		fmt.Sprintf("$%.2f", t.Amount),
 		t.Description,
