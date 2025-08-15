@@ -44,8 +44,6 @@ var (
 			BorderStyle(roundedBorder).
 			BorderForeground(borderColor)
 
-	searchStyle = baseStyle
-
 	keyStyle = lipgloss.NewStyle().
 			Foreground(highlightColor)
 )

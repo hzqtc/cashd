@@ -72,6 +72,17 @@ func (m *SearchInputModel) SetWidth(w int) {
 	}
 	m.table.SetColumns(columns)
 	m.table.SetWidth(w)
+	m.updateLayout()
+}
+
+func (m *SearchInputModel) updateLayout() {
+	if m.showNameInput {
+		nameInputMaxWidth := len(m.nameInput.Prompt) + nameLength + 1 // 1 for width of the cursor
+		m.input.Width = m.width - 4 - nameInputMaxWidth
+		m.input.SetCursor(m.input.Position()) // Trigger textinput.handleOverflow
+	} else {
+		m.input.Width = m.width - 4 - lipgloss.Width(m.renderHelp())
+	}
 }
 
 func (m *SearchInputModel) Focused() bool {
@@ -80,12 +91,14 @@ func (m *SearchInputModel) Focused() bool {
 
 func (m *SearchInputModel) Focus() {
 	m.input.Focus()
+	m.updateLayout()
 }
 
 func (m *SearchInputModel) Blur() {
 	m.input.Blur()
 	m.showTable = false
 	m.showNameInput = false
+	m.updateLayout()
 }
 
 func (m *SearchInputModel) Value() string {
@@ -99,16 +112,12 @@ func (m *SearchInputModel) Clear() tea.Cmd {
 
 func (m SearchInputModel) View() string {
 	var s string
-	help := m.renderHelp()
-
 	if m.showNameInput {
-		m.input.Width = m.width - 4 - lipgloss.Width(help) - lipgloss.Width(m.nameInput.View())
-		s = lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), m.nameInput.View(), help)
+		s = lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), m.nameInput.View())
 	} else {
-		m.input.Width = m.width - 4 - lipgloss.Width(help)
-		s = lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), help)
+		s = lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), m.renderHelp())
 	}
-	s = searchStyle.Render(s)
+	s = baseStyle.Width(m.width).Render(s)
 
 	if m.showTable {
 		s = lipgloss.JoinVertical(lipgloss.Left, s, baseStyle.Render(m.table.View()))
@@ -172,6 +181,7 @@ func (m *SearchInputModel) handleSearchInputKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, m.saveSearch):
 		m.input.Blur()
 		m.showNameInput = true
+		m.updateLayout()
 		m.nameInput.Focus()
 	case key.Matches(msg, m.loadSearch):
 		m.input.Blur()
@@ -200,6 +210,7 @@ func (m *SearchInputModel) handleNameInputKeys(msg tea.KeyMsg) tea.Cmd {
 		fallthrough
 	case key.Matches(msg, m.cancel):
 		m.showNameInput = false
+		m.updateLayout()
 		m.nameInput.Blur()
 		m.nameInput.SetValue("")
 		m.input.Focus()
