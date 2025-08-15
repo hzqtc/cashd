@@ -137,6 +137,10 @@ func (t *Transaction) AccountSymbol() string {
 	}
 }
 
+func (t *Transaction) FormattedAmount() string {
+	return FormatMoney(t.Amount)
+}
+
 func (t *Transaction) Matches(kws []string) bool {
 	for _, kw := range kws {
 		// Requires the transaction to contain ALL keywords

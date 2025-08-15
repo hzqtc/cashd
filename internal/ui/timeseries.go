@@ -105,7 +105,7 @@ func (m TimeSeriesChartModel) renderLegend() string {
 }
 
 func moneyAmountFormatter(i int, v float64) string {
-	return fmt.Sprintf("$%.0f", math.Round(v/10)*10)
+	return data.FormatMoneyInteger(math.Round(v/10) * 10)
 }
 
 func dateLabelFormatter(inc date.Increment) linechart.LabelFormatter {

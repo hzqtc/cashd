@@ -95,8 +95,8 @@ func (m SummaryModel) View() string {
 	var s strings.Builder
 	s.WriteString(fmt.Sprintf("Income transactions: %d\n", m.incomeTxnNum))
 	s.WriteString(fmt.Sprintf("Expense transactions: %d\n", m.expenseTxnNum))
-	s.WriteString(fmt.Sprintf("Total income: $%.2f\n", m.totalIncome))
-	s.WriteString(fmt.Sprintf("Total expenses: $%.2f\n", m.totalExpense))
+	s.WriteString(fmt.Sprintf("Total income: $%s\n", data.FormatMoney(m.totalIncome)))
+	s.WriteString(fmt.Sprintf("Total expenses: $%s\n", data.FormatMoney(m.totalExpense)))
 
 	if len(m.transactions) > 0 {
 		s.WriteString("\nTop income categories:\n")
@@ -187,14 +187,14 @@ func getBarChartModel(width int, data []summaryEntry) barchart.Model {
 	)
 }
 
-func (m SummaryModel) renderSummarySection(data []summaryEntry, chart barchart.Model) string {
+func (m SummaryModel) renderSummarySection(entries []summaryEntry, chart barchart.Model) string {
 	var s strings.Builder
-	for i, item := range data {
+	for i, item := range entries {
 		s.WriteString(fmt.Sprintf(
-			"%s %s: $%.2f\n",
+			"%s %s: $%s\n",
 			barChartStyles[i].Render(string(runes.FullBlock)), // Bar legend
 			item.key,
-			item.value,
+			data.FormatMoney(item.value),
 		))
 	}
 	s.WriteString("\n")

@@ -203,30 +203,30 @@ func (m *SortableTableModel) updateRows() {
 	m.table.SetRows(getTableRows(m.columns, m.dataSorter(m.sortColumn, m.sortDirection)))
 }
 
-func getTableRows(cols []column, data []any) []table.Row {
-	rows := make([]table.Row, len(data))
-	for i, cat := range data {
-		rowData := []string{}
+func getTableRows(cols []column, tableData []any) []table.Row {
+	rows := make([]table.Row, len(tableData))
+	for i, cat := range tableData {
+		row := []string{}
 		for _, col := range cols {
 			var formattedColData string
-			switch colData := col.getColumnData(cat); colData.(type) {
+			switch colData := col.getColumnData(cat).(type) {
 			case string:
-				formattedColData = colData.(string)
+				formattedColData = colData
 			case int:
 				formattedColData = fmt.Sprintf("%d", colData)
 			case float64:
-				formattedColData = fmt.Sprintf("$%.2f", colData)
+				formattedColData = data.FormatMoney(colData)
 			case time.Time:
-				formattedColData = colData.(time.Time).Format(time.DateOnly)
+				formattedColData = colData.Format(time.DateOnly)
 			default:
 				panic(fmt.Sprintf("unexpected table data type: %v", colData))
 			}
 			if col.rightAligned() {
 				formattedColData = fmt.Sprintf("%*s", col.width(), formattedColData)
 			}
-			rowData = append(rowData, formattedColData)
+			row = append(row, formattedColData)
 		}
-		rows[i] = table.Row(rowData)
+		rows[i] = table.Row(row)
 	}
 	return rows
 }

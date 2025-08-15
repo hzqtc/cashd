@@ -105,9 +105,9 @@ func (m InsightsModel) View() string {
 	if m.ins.incomeTxnNum > 0 {
 		s.WriteString("\n")
 		s.WriteString(fmt.Sprintf(
-			"%s Income: $%.2f in %d transactions\n",
+			"%s Income: $%s in %d transactions\n",
 			incomeStyle.Render(string(runes.FullBlock)),
-			m.ins.income,
+			data.FormatMoney(m.ins.income),
 			m.ins.incomeTxnNum,
 		))
 		s.WriteString("Top transactions:\n")
@@ -119,9 +119,9 @@ func (m InsightsModel) View() string {
 	if m.ins.expenseTxnNum > 0 {
 		s.WriteString("\n")
 		s.WriteString(fmt.Sprintf(
-			"%s Expense: $%.2f in %d transactions\n",
+			"%s Expense: $%s in %d transactions\n",
 			expenseStyle.Render(string(runes.FullBlock)),
-			m.ins.expense,
+			data.FormatMoney(m.ins.expense),
 			m.ins.expenseTxnNum,
 		))
 		s.WriteString("Top transactions:\n")
@@ -144,7 +144,7 @@ func formatTransaction(t *data.Transaction) string {
 		"%s %*s %s\n",
 		t.Date.Format(time.DateOnly),
 		amountColWidth,
-		fmt.Sprintf("$%.2f", t.Amount),
+		fmt.Sprintf("$%s", t.FormattedAmount()),
 		t.Description,
 	)
 }
