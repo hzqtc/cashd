@@ -165,13 +165,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) processSearchInputKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmd tea.Cmd
-	if key.Matches(msg, m.clearSearch) {
-		m.searchInput.Blur()
-		return m.searchInput.Clear()
-	} else {
-		m.searchInput, cmd = m.searchInput.Update(msg)
-		return cmd
-	}
+	m.searchInput, cmd = m.searchInput.Update(msg)
+	m.updateLayout()
+	return cmd
 }
 
 func (m *Model) processTransactionViewKeys(msg tea.KeyMsg) tea.Cmd {

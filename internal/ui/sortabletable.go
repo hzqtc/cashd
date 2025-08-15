@@ -78,12 +78,11 @@ func NewSortableTableModel(name string, config TableConfig) SortableTableModel {
 		sortPrev:    key.NewBinding(key.WithKeys("S")),
 		reverseSort: key.NewBinding(key.WithKeys("r")),
 	}
-	t := table.New(
+	m.table = table.New(
 		table.WithColumns(m.getTableColumns()),
 		table.WithFocused(true),
 		table.WithStyles(getTableStyle()),
 	)
-	m.table = t
 	return m
 }
 

@@ -8,10 +8,9 @@ import (
 )
 
 const (
-	datePickerHeight  = 5
-	searchInputHeight = 3
-	insightsHeight    = 14
-	vSpacing          = 2
+	datePickerHeight = 5
+	insightsHeight   = 14
+	vSpacing         = 2
 )
 
 func (m Model) View() string {
@@ -77,7 +76,8 @@ func (m *Model) updateLayout() {
 	}
 	bodyHeight := m.height - datePickerHeight - bottomHeight - vSpacing
 	// Transaction view components
-	m.searchInput.SetWidth(ui.TxnTableWidth - 4)
+	m.searchInput.SetWidth(ui.TxnTableWidth)
+	searchInputHeight := lipgloss.Height(m.searchInput.View())
 	m.transactionTable.SetDimensions(ui.TxnTableWidth, bodyHeight-searchInputHeight)
 	m.summary.SetDimensions(max(30, m.width-ui.TxnTableWidth-4), bodyHeight)
 	// Account view components

@@ -1,40 +1,81 @@
 package ui
 
 import (
+	"log"
+	"strings"
+
+	"cashd/internal/data"
+
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type SearchInputModel struct {
-	input textinput.Model
+	width         int
+	showNameInput bool
+	showTable     bool
 
-	cancelSearch key.Binding
-	search       key.Binding
+	input     textinput.Model
+	nameInput textinput.Model
+	table     table.Model
+
+	cancel       key.Binding
+	enter        key.Binding
+	saveSearch   key.Binding
+	loadSearch   key.Binding
+	deleteSearch key.Binding
 }
 
 type SearchMsg struct {
 	query string
 }
 
+const nameLength = 20
+
 func NewSearchInputModel() SearchInputModel {
 	input := textinput.New()
 	input.Placeholder = "Search..."
 	input.Prompt = " / "
 
+	nameInput := textinput.New()
+	nameInput.Prompt = "Name this search: "
+	nameInput.CharLimit = nameLength
+
 	return SearchInputModel{
-		input:        input,
-		cancelSearch: key.NewBinding(key.WithKeys("esc")),
-		search:       key.NewBinding(key.WithKeys("enter")),
+		input:     input,
+		nameInput: nameInput,
+		table: table.New(
+			table.WithFocused(true),
+			table.WithHeight(5),
+			table.WithStyles(getTableStyle()),
+		),
+
+		showNameInput: false,
+		showTable:     false,
+
+		cancel:       key.NewBinding(key.WithKeys("esc")),
+		enter:        key.NewBinding(key.WithKeys("enter")),
+		saveSearch:   key.NewBinding(key.WithKeys("ctrl+s")),
+		loadSearch:   key.NewBinding(key.WithKeys("ctrl+l")),
+		deleteSearch: key.NewBinding(key.WithKeys("ctrl+d")),
 	}
 }
 
 func (m *SearchInputModel) SetWidth(w int) {
-	m.input.Width = w
+	m.width = w
+	columns := []table.Column{
+		{Title: "Name", Width: nameLength},
+		{Title: "Query", Width: w - nameLength - 4},
+	}
+	m.table.SetColumns(columns)
+	m.table.SetWidth(w)
 }
 
 func (m *SearchInputModel) Focused() bool {
-	return m.input.Focused()
+	return m.input.Focused() || m.showNameInput || m.showTable
 }
 
 func (m *SearchInputModel) Focus() {
@@ -43,6 +84,8 @@ func (m *SearchInputModel) Focus() {
 
 func (m *SearchInputModel) Blur() {
 	m.input.Blur()
+	m.showTable = false
+	m.showNameInput = false
 }
 
 func (m *SearchInputModel) Value() string {
@@ -55,28 +98,145 @@ func (m *SearchInputModel) Clear() tea.Cmd {
 }
 
 func (m SearchInputModel) View() string {
-	return searchStyle.Render(m.input.View())
+	var s string
+	help := m.renderHelp()
+
+	if m.showNameInput {
+		m.input.Width = m.width - 4 - lipgloss.Width(help) - lipgloss.Width(m.nameInput.View())
+		s = lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), m.nameInput.View(), help)
+	} else {
+		m.input.Width = m.width - 4 - lipgloss.Width(help)
+		s = lipgloss.JoinHorizontal(lipgloss.Top, m.input.View(), help)
+	}
+	s = searchStyle.Render(s)
+
+	if m.showTable {
+		s = lipgloss.JoinVertical(lipgloss.Left, s, baseStyle.Render(m.table.View()))
+	}
+
+	return s
+}
+
+func (m *SearchInputModel) renderHelp() string {
+	var s strings.Builder
+	if m.showTable {
+		s.WriteString(keyStyle.Render("⎋") + " hide")
+		s.WriteString(" | ")
+		s.WriteString(keyStyle.Render("^d") + " delete")
+	} else if m.input.Focused() {
+		if strings.TrimSpace(m.input.Value()) != "" {
+			s.WriteString(keyStyle.Render("^s") + " save")
+			s.WriteString(" | ")
+		}
+		s.WriteString(keyStyle.Render("^l") + " load saved")
+	}
+	return s.String()
+}
+
+func (m *SearchInputModel) refreshSavedSearch() {
+	if searches, err := data.LoadSavedSearches(); err != nil {
+		log.Printf("Error loading saved searches: %v", err)
+	} else {
+		rows := make([]table.Row, len(searches))
+		for i, s := range searches {
+			rows[i] = table.Row{s.Name, s.Query}
+		}
+		m.table.SetRows(rows)
+	}
 }
 
 func (m SearchInputModel) Update(msg tea.Msg) (SearchInputModel, tea.Cmd) {
-	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.cancelSearch):
-			m.input.SetValue("")
-			m.input.Blur()
-			cmd = m.sendSearchMsg()
-		case key.Matches(msg, m.search):
-			m.input.Blur()
-			cmd = m.sendSearchMsg()
-		default:
-			m.input, cmd = m.input.Update(msg)
+		case m.showTable:
+			return m, m.handleTableKeys(msg)
+		case m.nameInput.Focused():
+			return m, m.handleNameInputKeys(msg)
+		case m.input.Focused():
+			return m, m.handleSearchInputKeys(msg)
 		}
+	}
+	return m, nil
+}
+
+func (m *SearchInputModel) handleSearchInputKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	switch {
+	case key.Matches(msg, m.cancel):
+		m.input.SetValue("")
+		fallthrough
+	case key.Matches(msg, m.enter):
+		m.Blur()
+		cmd = m.sendSearchMsg()
+	case key.Matches(msg, m.saveSearch):
+		m.input.Blur()
+		m.showNameInput = true
+		m.nameInput.Focus()
+	case key.Matches(msg, m.loadSearch):
+		m.input.Blur()
+		m.refreshSavedSearch()
+		m.showTable = true
 	default:
 		m.input, cmd = m.input.Update(msg)
 	}
-	return m, cmd
+	return cmd
+}
+
+func (m *SearchInputModel) handleNameInputKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	switch {
+	case key.Matches(msg, m.enter):
+		searchName := strings.TrimSpace(m.nameInput.Value())
+		if searchName == "" {
+			break
+		}
+		err := data.AddOrUpdateSavedSearch(searchName, m.input.Value())
+		if err != nil {
+			log.Printf("Error saving search: %v", err)
+			break
+		}
+		m.refreshSavedSearch()
+		fallthrough
+	case key.Matches(msg, m.cancel):
+		m.showNameInput = false
+		m.nameInput.Blur()
+		m.nameInput.SetValue("")
+		m.input.Focus()
+	default:
+		m.nameInput, cmd = m.nameInput.Update(msg)
+	}
+	return cmd
+}
+
+func (m *SearchInputModel) handleTableKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmd tea.Cmd
+	switch {
+	case key.Matches(msg, m.enter):
+		selectedRow := m.table.SelectedRow()
+		if len(selectedRow) > 1 {
+			name := selectedRow[0]
+			query := selectedRow[1]
+			m.input.SetValue(query)
+			m.Blur()
+			data.AddOrUpdateSavedSearch(name, query) // Update timestamp
+			m.refreshSavedSearch()
+			cmd = m.sendSearchMsg()
+		}
+	case key.Matches(msg, m.cancel):
+		m.showTable = false
+		m.input.Focus()
+	case key.Matches(msg, m.deleteSearch):
+		selectedRow := m.table.SelectedRow()
+		if len(selectedRow) > 1 {
+			name := selectedRow[0]
+			data.DeleteSavedSearch(name)
+			m.refreshSavedSearch()
+		}
+	default:
+		m.table, cmd = m.table.Update(msg)
+	}
+	return cmd
 }
 
 func (m *SearchInputModel) sendSearchMsg() tea.Cmd {
@@ -86,3 +246,4 @@ func (m *SearchInputModel) sendSearchMsg() tea.Cmd {
 		}
 	}
 }
+
