@@ -129,10 +129,14 @@ func (m SearchInputModel) View() string {
 func (m *SearchInputModel) renderHelp() string {
 	var s strings.Builder
 	if m.showTable {
+		s.WriteString(keyStyle.Render("⏎") + " select")
+		s.WriteString(" | ")
 		s.WriteString(keyStyle.Render("⎋") + " hide")
 		s.WriteString(" | ")
 		s.WriteString(keyStyle.Render("^d") + " delete")
 	} else if m.input.Focused() {
+		s.WriteString(keyStyle.Render("⏎") + " search")
+		s.WriteString(" | ")
 		if strings.TrimSpace(m.input.Value()) != "" {
 			s.WriteString(keyStyle.Render("^s") + " save")
 			s.WriteString(" | ")
@@ -257,4 +261,3 @@ func (m *SearchInputModel) sendSearchMsg() tea.Cmd {
 		}
 	}
 }
-
