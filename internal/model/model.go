@@ -4,6 +4,7 @@ import (
 	"cashd/internal/data"
 	"cashd/internal/data/csv"
 	"cashd/internal/data/ledger"
+	"cashd/internal/date"
 	"cashd/internal/ui"
 	"fmt"
 	"sort"
@@ -294,7 +295,7 @@ func (m *Model) onSelectedAccountChanged() {
 
 	entries := aggregateByAccount(m.allTransactions, m.datePicker.Inc(), m.accountTable.Selected())
 	m.accountChart.SetEntries(
-		fmt.Sprintf("Account time series: %s", m.accountTable.Selected()),
+		getTimeSeriesChartName(m.datePicker.Inc(), m.accountTable.Selected()),
 		entries,
 		m.datePicker.Inc(),
 	)
@@ -309,12 +310,20 @@ func (m *Model) onSelectedCategoryChanged() {
 
 	entries := aggregateByCategory(m.allTransactions, m.datePicker.Inc(), m.categoryTable.Selected())
 	m.categoryChart.SetEntries(
-		fmt.Sprintf("Category time series: %s", m.categoryTable.Selected()),
+		getTimeSeriesChartName(m.datePicker.Inc(), m.categoryTable.Selected()),
 		entries,
 		m.datePicker.Inc(),
 	)
 
 	m.updateCategoryInsights()
+}
+
+func getTimeSeriesChartName(inc date.Increment, name string) string {
+	incStr := string(inc)
+	if inc == date.AllTime {
+		incStr = string(date.Annually)
+	}
+	return fmt.Sprintf("%s time series: %s", incStr, name)
 }
 
 func (m *Model) updateAccountInsights() {
