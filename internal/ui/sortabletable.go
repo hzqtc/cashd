@@ -37,7 +37,7 @@ type tableDataProvider func(transactions []*data.Transaction) tableDataSorter
 // Return a unique string as the row's id
 type rowIdentifier func(table.Row) string
 
-type TableConfig struct {
+type tableConfig struct {
 	columns           []column
 	dataProvider      tableDataProvider
 	rowId             rowIdentifier
@@ -65,7 +65,7 @@ type SortableTableModel struct {
 	reverseSort key.Binding
 }
 
-func NewSortableTableModel(name string, config TableConfig) SortableTableModel {
+func newSortableTableModel(name string, config tableConfig) SortableTableModel {
 	m := SortableTableModel{
 		name:          name,
 		columns:       config.columns,

@@ -23,12 +23,6 @@ type dataLoadingErrorMsg struct {
 	err error
 }
 
-const (
-	tableTransaction = "Transaction"
-	tableAccount     = "Account"
-	tableCategory    = "Category"
-)
-
 type Model struct {
 	allTransactions  []*data.Transaction
 	viewTransactions []*data.Transaction
@@ -61,15 +55,15 @@ type Model struct {
 func NewModel() Model {
 	return Model{
 		loadingScreen:    ui.NewLoadingScreenModel(),
-		transactionTable: ui.NewSortableTableModel(tableTransaction, ui.TransactionTableConfig),
+		transactionTable: ui.NewTransactionTableModel(),
 		datePicker:       ui.NewDatePickerModel(),
 		navBar:           ui.NewNavBarModel(),
 		summary:          ui.NewSummaryModel(),
 		searchInput:      ui.NewSearchInputModel(),
-		accountTable:     ui.NewSortableTableModel(tableAccount, ui.AccountTableConfig),
+		accountTable:     ui.NewAccountTableModel(),
 		accountInsights:  ui.NewInsightsModel(),
 		accountChart:     ui.NewTimeSeriesChartModel(),
-		categoryTable:    ui.NewSortableTableModel(tableCategory, ui.CategoryTableConfig),
+		categoryTable:    ui.NewCategoryTableModel(),
 		categoryInsights: ui.NewInsightsModel(),
 		categoryChart:    ui.NewTimeSeriesChartModel(),
 		help:             ui.NewHelpModel(),
@@ -137,9 +131,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case ui.TableSelectionChangedMsg:
 		switch msg.TableName {
-		case tableAccount:
+		case ui.AccountTableName:
 			m.onSelectedAccountChanged()
-		case tableCategory:
+		case ui.CategoryTableName:
 			m.onSelectedCategoryChanged()
 		}
 

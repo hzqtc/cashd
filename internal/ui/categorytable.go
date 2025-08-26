@@ -93,7 +93,13 @@ var CategoryTableWidth = func() int {
 	return tableWidth
 }()
 
-var CategoryTableConfig = TableConfig{
+const CategoryTableName = "Category"
+
+func NewCategoryTableModel() SortableTableModel {
+	return newSortableTableModel(CategoryTableName, categoryTableConfig)
+}
+
+var categoryTableConfig = tableConfig{
 	columns: func() []column {
 		cols := []column{}
 		for i := range int(totalNumCatColumns) {

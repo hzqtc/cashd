@@ -95,7 +95,13 @@ var AccountTableWidth = func() int {
 	return tableWidth
 }()
 
-var AccountTableConfig = TableConfig{
+const AccountTableName = "Account"
+
+func NewAccountTableModel() SortableTableModel {
+	return newSortableTableModel(AccountTableName, accountTableConfig)
+}
+
+var accountTableConfig = tableConfig{
 	columns: func() []column {
 		cols := []column{}
 		for i := range int(totalNumAcctColumns) {

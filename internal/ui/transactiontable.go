@@ -103,7 +103,13 @@ var TxnTableWidth = func() int {
 	return tableWidth
 }()
 
-var TransactionTableConfig = TableConfig{
+const TxnTableName = "Transaction"
+
+func NewTransactionTableModel() SortableTableModel {
+	return newSortableTableModel(TxnTableName, transactionTableConfig)
+}
+
+var transactionTableConfig = tableConfig{
 	columns: func() []column {
 		cols := []column{}
 		for i := range int(totalNumTxnColumns) {
