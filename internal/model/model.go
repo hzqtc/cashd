@@ -138,7 +138,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case ui.SearchMsg:
-		m.searchTransactions()
+		cmds = append(cmds, m.updateTransactionTable())
 
 	case ui.NavigationMsg:
 		// Handled in view.go; nothing to do here
@@ -241,29 +241,28 @@ func (m *Model) filterTransactions() tea.Cmd {
 		panic(fmt.Sprintf("Invalid date range: %s - %s", startDate.Format(time.DateOnly), endDate.Format(time.DateOnly)))
 	}
 
-	// Get transactions within date range
-	m.viewTransactions = []*data.Transaction{}
-	for i := startIndex; i < endIndex; i++ {
-		t := m.allTransactions[i]
-		m.viewTransactions = append(m.viewTransactions, t)
-	}
+	// It's safe to just create a subslice (no copy) because viewTransactions is read-only
+	m.viewTransactions = m.allTransactions[startIndex:endIndex]
 
-	var cmds []tea.Cmd
-	cmds = append(cmds, m.accountTable.SetTransactions(m.viewTransactions))
-	cmds = append(cmds, m.categoryTable.SetTransactions(m.viewTransactions))
-	// Trigger a search msg to handle existing search queries
-	cmds = append(cmds, func() tea.Msg { return ui.SearchMsg{} })
-	return tea.Batch(cmds...)
+	return tea.Batch(
+		m.updateTransactionTable(),
+		m.accountTable.SetTransactions(m.viewTransactions),
+		m.categoryTable.SetTransactions(m.viewTransactions),
+	)
 }
 
-func (m *Model) searchTransactions() {
-	var matchingTransactions []*data.Transaction
-	searchQuery := strings.TrimSpace(m.searchInput.Value())
+func (m *Model) updateTransactionTable() tea.Cmd {
+	txns := m.searchTransactions()
+	m.summary.SetTransactions(txns)
+	return m.transactionTable.SetTransactions(txns)
+}
 
+func (m *Model) searchTransactions() []*data.Transaction {
+	searchQuery := strings.TrimSpace(m.searchInput.Value())
 	if searchQuery == "" {
-		matchingTransactions = m.viewTransactions
+		return m.viewTransactions
 	} else {
-		matchingTransactions = []*data.Transaction{}
+		matchingTransactions := []*data.Transaction{}
 		subQueries := strings.Split(searchQuery, " OR ")
 		for _, t := range m.viewTransactions {
 			for _, query := range subQueries {
@@ -275,11 +274,8 @@ func (m *Model) searchTransactions() {
 				}
 			}
 		}
+		return matchingTransactions
 	}
-
-	// Search query only applies to transaction view (transaction table & summary)
-	m.transactionTable.SetTransactions(matchingTransactions)
-	m.summary.SetTransactions(matchingTransactions)
 }
 
 func (m *Model) onSelectedAccountChanged() {
