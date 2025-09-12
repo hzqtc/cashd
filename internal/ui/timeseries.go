@@ -96,7 +96,7 @@ func (m TimeSeriesChartModel) View() string {
 
 func (m TimeSeriesChartModel) renderLegend() string {
 	return fmt.Sprintf(
-		"%s %s    %s %s\n\n",
+		"\n%s %s    %s %s\n\n",
 		tsChartIncomeLineStyle.Render(string(runes.FullBlock)),
 		data.Income,
 		tsChartExpenseLineStyle.Render(string(runes.FullBlock)),

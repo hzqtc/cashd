@@ -13,6 +13,8 @@ import (
 
 const (
 	barChartHeight = 1
+
+	maxSummaryEntries = 5
 )
 
 type summaryEntry struct {
@@ -154,19 +156,19 @@ func sortAndTruncate(input map[string]float64) []summaryEntry {
 	sort.Slice(sorted, func(i, j int) bool {
 		return sorted[i].value > sorted[j].value
 	})
-	if len(sorted) > 5 {
-		// Sum [4:] to be "Everything else"
+	if len(sorted) > maxSummaryEntries {
+		// Sum [maxSummaryEntries-1:] to be "Everything else"
 		sumOfRemaining := 0.0
-		for _, s := range sorted[4:] {
+		for _, s := range sorted[maxSummaryEntries-1:] {
 			sumOfRemaining += s.value
 		}
-		// Keep the first 4 items as-is
-		sorted = sorted[:4]
-		// Add Everything else as the 5th item
+		// Keep the first items as-is
+		sorted = sorted[:maxSummaryEntries-1]
+		// Add Everything else as the last item
 		sorted = append(sorted, summaryEntry{"Everything else", sumOfRemaining})
 	}
 
-	if len(sorted) > 5 {
+	if len(sorted) > maxSummaryEntries {
 		panic("assertion failed: each summary section should not have more than 5 items")
 	}
 
