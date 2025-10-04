@@ -191,7 +191,7 @@ func (m DatePickerModel) View() string {
 
 	style := lipgloss.NewStyle().
 		Border(getRoundedBorderWithTitle(
-			fmt.Sprintf("Date range: %s - %s", m.startDate.Format(time.DateOnly), m.endDate.Format(time.DateOnly)),
+			fmt.Sprintf("Date range: %s - %s", m.startDate.Format(time.DateOnly), m.endDate.AddDate(0, 0, -1).Format(time.DateOnly)),
 			m.width,
 		)).
 		BorderForeground(borderColor).
